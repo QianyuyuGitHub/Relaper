@@ -76,6 +76,23 @@ def get_all_image_names(file_path, is_test):
                         xml_filename_Includingfolder[str(filename + suffix)] = [str(file_path), str(file_path)]
                         xml_names.append(str(filename+suffix))
                         xml_paths.append(str(file_path))
+            if suffix == '.png':
+            # if 0:
+                #use regular expression to get the includeing directory
+                folder = re.search(r'(../康师傅/)(.*(?=\\))(\\*)(.*)', root)
+                if folder: #it may be None if not match in RE
+                    if folder.group(4):
+                        image_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(4)), str( file_path + folder.group(2) + '/' + folder.group(4) + '/' )]
+                        image_names.append(str(filename+suffix))
+                        image_paths.append(str( file_path + folder.group(2) + '/' + folder.group(4) + '/' ))
+                    elif folder.group(2):
+                        image_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(2)), str( file_path + folder.group(2) )]
+                        image_names.append(str(filename+suffix))
+                        image_paths.append(str( file_path + folder.group(2) ))
+                    else:
+                        image_filename_Includingfolder[str(filename + suffix)] = [str(file_path), str(file_path)]
+                        image_names.append(str(filename+suffix))
+                        image_paths.append(str(file_path))
         # print(files)
         if '不一致图片' in dirs:
             # dirs.remove('不一致图片')  # don't visit 不一致图片 directories
@@ -250,7 +267,10 @@ if __name__ == '__main__':
         is_test = 1 #this is used for marking if it's in a test or not
         main_path = "../康师傅/"
         test_path = "./test/"
-        _, _, _, xmlNames, xmlPaths, xml_Name_IncludingFolder = get_all_image_names(main_path, is_test)
-        print('xml name: ', xmlNames)
-        print('xml path: ', xmlPaths)
-        print('xml name-folder: ', xml_Name_IncludingFolder)
+        imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder = get_all_image_names(main_path, is_test)
+        # print('xml name: ', xmlNames)
+        # print('xml path: ', xmlPaths)
+        # print('xml name-folder: ', xml_Name_IncludingFolder)
+        print('image name: ', imageNames)
+        print('image path: ', imagePaths)
+        print('image name-folder: ', image_Name_IncludingFolder)
