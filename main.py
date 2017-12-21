@@ -11,15 +11,7 @@ import re
 from PIL import Image
 from os.path import join, getsize
 
-'''
-    This function is used to get all the files' and sub_folders' name for further operation
-    
-    :args
-        file_path = the path you want to explore
-    :returns
-        image_name = dict contains all the image names 
-        image_path = dict contains all the images' path
-'''
+
 
 '''
     This function is a print function used to print temporary results
@@ -29,7 +21,16 @@ from os.path import join, getsize
 def testprint(display_data):
     if is_test:
         print(display_data)
-
+'''
+    This function is used to get all the files' and sub_folders' name for further operation
+    
+    :args
+        file_path = the path you want to explore
+        is_test = whether it's a test mode or real implementation
+    :returns
+        image_name = dict contains all the image names 
+        image_path = dict contains all the images' path
+'''
 def get_all_image_names(file_path, is_test):
     image_names = []
     image_paths = []
@@ -196,9 +197,35 @@ def get_half_noodle(image):
     :returns
         None
 '''
-def split_images_in_batch(process_num):
-    for i in range(process_num):
-        pass
+def split_images_in_batch(process_num, imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder):
+    imageCount = 0
+    for image in imageNames:
+        part_horizontal_left, part_horizontal_right, part_longitudinal_up, part_longitudinal_down,\
+        part_cross_center, part_vertical_center = get_helf_noodel_improved(image)
+        save_image_to_files_standerd(part_horizontal_left, )
+
+        imageCount += 1
+'''
+    This function simply store the image to the corresponding folders
+    
+    :arg
+        image = image that will be stored
+        label = to denote the positive or negative samples
+        tag = to denote the position of image where it belong to it's original Noodle_Image
+    :returns
+        None
+'''
+def save_image_to_files_standerd(image, label, tag, directory = ''):
+    if directory:
+        for image in images:
+            image.save(directory+str(tag)+'.png')
+    else:
+        try:
+            # originalImage.save(path_1 + outFile[0])  #no need regenerate original images? Maybe need, casue the original directory is a mess
+            image.save(str(tag)+'.png')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
 '''
     This function is used to save the return image from function split_original_image() into files.
@@ -248,7 +275,7 @@ def save_images_to_files_process(originalImage, noodel_1, noodel_2, fileSavePath
 
 if __name__ == '__main__':
     ###prototype 1 deal with one image:
-    process = 'prototype2'
+    process = 'prototype1'
     if (process == 'prototype1'):
         origin_iamge_path =  "../康师傅/2017.9.21/2017.9.21原图/"
         inFileName_relative = "leaper_09_20170114_130001131_0000005624.png"
@@ -260,7 +287,14 @@ if __name__ == '__main__':
         original_image.show()
         noodel_1_image.show()
         noodel_2_image.show()
-        save_images_to_files_process(original_image, noodel_1_image, noodel_2_image)
+        # save_images_to_files_process(original_image, noodel_1_image, noodel_2_image)
+        i1, i2, i3, i4, i5, i6 = get_helf_noodel_improved(noodel_1_image)
+        i1.show()
+        i2.show()
+        i3.show()
+        i4.show()
+        i5.show()
+        i6.show()
 
     ###prototype 2 image_batch_process:
     if (process == 'prototype2'):
@@ -271,6 +305,12 @@ if __name__ == '__main__':
         # print('xml name: ', xmlNames)
         # print('xml path: ', xmlPaths)
         # print('xml name-folder: ', xml_Name_IncludingFolder)
-        print('image name: ', imageNames)
-        print('image path: ', imagePaths)
-        print('image name-folder: ', image_Name_IncludingFolder)
+        print("image name: ", imageNames)
+        print("image path: ", imagePaths)
+        print("image name-folder: ", image_Name_IncludingFolder)
+        imageCount = len(imageNames)
+        if len(imageNames) == len(imagePaths):
+            print("There are ", imageCount, " images to be processed")
+        split_images_in_batch(len(imageNames), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
+
+
