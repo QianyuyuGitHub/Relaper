@@ -112,12 +112,12 @@ def get_all_image_names(file_path, is_test):
     :returns
         noodle_* = the No.* noodle sub_image in the original image    
 '''
-def split_original_image(image):
+def split_original_image(Image_wait_to_split):
     box_1 = (280, 90, 610, 420)
     box_2 = (680, 90, 1010, 420)
     # original_image = Image.open(fileNameWithPath) # to prevent from doing open and close operators too frequently, not here, use in main
-    noodle_1 = original_image.crop(box_1)
-    noodle_2 = original_image.crop(box_2)
+    noodle_1 = Image_wait_to_split.crop(box_1)
+    noodle_2 = Image_wait_to_split.crop(box_2)
     ##Uesd to show images on screen
     # noodle_1.show()
     # noodle_2.show()
@@ -128,20 +128,25 @@ def split_original_image(image):
     
     :arg
         noodle_only = the image only with noodle 
-        ...* = the coordinates of the noodle, so this function can still deal with the original images
+        ...* = the coordinates of the noodle, so this function can still deal with the original images, have default values
     :returns
         ...* = all the half of the noodle image, 330 * 165
 '''
-def get_helf_noodle_improved(noodle_only, up_left_x = 0, up_left_y = 0, down_right_x = 330, down_right_y = 330):
-    pixel = 330
+def get_helf_noodle_improved(noodle_only, up_left_x = 0, up_left_y = 0, down_right_x = 330, down_right_y = 330, pixel = 330):
     box_horizontal_left = (up_left_x, up_left_y, down_right_x - pixel/2, down_right_y)
-    box_horizontal_right = (up_left_x - pixel/2, up_left_y, down_right_x, down_right_y)
+    box_horizontal_right = (up_left_x + pixel/2, up_left_y, down_right_x, down_right_y)
 
     box_longitudinal_up = (up_left_x, up_left_y, down_right_x, down_right_y - pixel/2)
-    box_longitudinal_down = (up_left_x, up_left_y, down_right_x - pixel/2, down_right_y)
+    box_longitudinal_down = (up_left_x, up_left_y + pixel/2, down_right_x, down_right_y)
 
-    box_cross_center = (up_left_x, up_left_y + pixel/4, down_right_x, down_right_y - pixel/4)
-    box_vertical_center = (up_left_x + pixel/4, up_left_y, down_right_x - pixel/4, down_right_y)
+    # in this part, since the round off error, the image will have one more pixel
+    # the solution is simple, add a offset to them
+    # 330/4 = 82.5
+    # print(up_left_y + pixel/4)        ||  82.5
+    # print(down_right_y - pixel/4)     ||  247.5
+    # offset = 0.3 is just some figure that works, I don't exactly know why
+    box_cross_center = (up_left_x, up_left_y + pixel/4, down_right_x, down_right_y - pixel/4 - 0.3)
+    box_vertical_center = (up_left_x + pixel/4, up_left_y, down_right_x - pixel/4 - 0.3, down_right_y)
 
     part_horizontal_left = noodle_only.crop(box_horizontal_left)
     part_horizontal_right = noodle_only.crop(box_horizontal_right)
@@ -192,6 +197,8 @@ def get_half_noodle(image):
             part_1_cross_center, part_1_vertical_center, part_2_horizontal_left, part_2_horizontal_right,\
             part_2_longitudinal_up, part_2_longitudinal_down, part_2_cross_center, part_2_vertical_center
 
+def parse_xml_file(xml_file_name):
+    pass
 
 '''
     This function is used to deal with more than one images situation, and base on the function split_original_image()
@@ -209,36 +216,133 @@ def get_half_noodle(image):
 '''
 def split_images_in_batch_and_save(process_num, imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder):
     imageCount = 0
+    # for image, xml in zip(imageNames, xmlNames): # they are not in the same order
     for image in imageNames:
-        original_image = Image.open(image_Name_IncludingFolder[image][1]) #find
-        noodle_image1, noodle_image2 = split_original_image()
-        part_horizontal_left, part_horizontal_right, part_longitudinal_up, part_longitudinal_down,\
-        part_cross_center, part_vertical_center = get_helf_noodle_improved(image)
-        save_image_to_files_standerd(part_horizontal_left, )
+        split_Name_and_Suffix = re.search(r'(\S*(?=\.))(\.*)(\S*)', image)
+        imageNameWithoutSuffix, suffix = split_Name_and_Suffix.group(1),split_Name_and_Suffix.group(3)
+        # testprint(imageNameWithoutSuffix)
+        # testprint(suffix)
+        xml_name_to_search = imageNameWithoutSuffix + '.xml'
+        if xml_name_to_search in xmlNames:
+            if process_num == imageCount:
+                break
+            # before save images to files, need to find out the label by parsing the .xml files:
+            parse_xml_file(xml_Name_IncludingFolder[image][1]+ )
+
+            original_image = Image.open(image_Name_IncludingFolder[image][1]+image)
+            # here the noodle_image1 hasn't been refresh! but why is that？
+            # cause you idiot used a original_image parameter in the function! Be careful
+            noodle_image1, noodle_image2 = split_original_image(original_image)
+            # noodle_image1, noodle_image2 = split_original_image(image_Name_IncludingFolder[image][1]+image)
+            # noodle_image1.show()
+            part_horizontal_left, part_horizontal_right, part_longitudinal_up, part_longitudinal_down,\
+            part_cross_center, part_vertical_center = get_helf_noodle_improved(noodle_image1)
+
+            part_longitudinal_up = part_longitudinal_up.rotate(90, resample=0, expand=1)
+            part_longitudinal_down = part_longitudinal_down.rotate(90, resample=0, expand=1)
+            part_vertical_center = part_vertical_center.rotate(90, resample=0, expand=1)
+            # save_image_to_files_standerd(part_horizontal_left, '1', 'hl_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_horizontal_right, '1', 'hr_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_longitudinal_up, '1', 'lu_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_longitudinal_down, '1', 'ld_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_cross_center, '1', 'cc_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_vertical_center, '1', 'vc_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_horizontal_left, '1', 'hl_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_horizontal_right, '1', 'hr_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_longitudinal_up, '1', 'lu_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_longitudinal_down, '1', 'ld_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_cross_center, '1', 'cc_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_vertical_center, '1', 'vc_test' + str(imageCount), './test/')
+
+            part_horizontal_left, part_horizontal_right, part_longitudinal_up, part_longitudinal_down,\
+            part_cross_center, part_vertical_center = get_helf_noodle_improved(noodle_image2)
+
+            part_longitudinal_up = part_longitudinal_up.rotate(90, resample=0, expand=1)
+            part_longitudinal_down = part_longitudinal_down.rotate(90, resample=0, expand=1)
+            part_vertical_center = part_vertical_center.rotate(90, resample=0, expand=1)
+            # save_image_to_files_standerd(part_horizontal_left, '1', 'hl_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_horizontal_right, '1', 'hr_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_longitudinal_up, '1', 'lu_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_longitudinal_down, '1', 'ld_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_cross_center, '1', 'cc_test' + str(imageCount), './test/')
+            # save_image_to_files_standerd(part_vertical_center, '1', 'vc_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_horizontal_left, '1', 'hl_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_horizontal_right, '1', 'hr_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_longitudinal_up, '1', 'lu_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_longitudinal_down, '1', 'ld_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_cross_center, '1', 'cc_test' + str(imageCount), './test/')
+            save_image_to_files_standerd_JPEG(part_vertical_center, '1', 'vc_test' + str(imageCount), './test/')
 
         imageCount += 1
 '''
     This function simply store the image to the corresponding folders
     
     :arg
-        image = image that will be stored
+        image = image that will be stored, it's a image itself already, can be directory stored
+            ///but I think maybe it's a smarter way not to do that, cause it will slow the program down I suppose
+            ///maybe just send the name and read in sub-function will be more efficient? Don't know yet.
         label = to denote the positive or negative samples
         tag = to denote the position of image where it belong to it's original Noodle_Image
     :returns
         None
 '''
-def save_image_to_files_standerd(images, label, tag, directory = ''):
+def save_image_to_files_standerd(image, label, tag, directory = ''):
     if directory:
-        for image in images:
+        try:
+            os.makedirs(directory, exist_ok=False)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise    # Error when creating new folder/directory
+            # for imageName in images:
+            #     image = Image.open(imageName)
+        try:
             image.save(directory+str(tag)+'.png')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
     else:
-        for image in images:
-            try:
-                # originalImage.save(path_1 + outFile[0])  #no need regenerate original images? Maybe need, cause the origin directory is a mess
-                image.save('./' + str(label) + '/' + str(tag)+'.png')
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
+        try:
+            path = './' + label + '/'
+            os.makedirs(path, exist_ok=False)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise    # Error when creating new folder/directory
+        try:
+            # originalImage.save(path_1 + outFile[0])  #no need regenerate original images? Maybe need, cause the origin directory is a mess
+            image.save('./' + str(label) + '/' + str(tag)+'.png')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+def save_image_to_files_standerd_JPEG(image, label, tag, directory = ''):
+    if directory:
+        try:
+            os.makedirs(directory, exist_ok=False)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise    # Error when creating new folder/directory
+            # for imageName in images:
+            #     image = Image.open(imageName)
+        try:
+            image.save(directory+str(tag)+'.jpeg')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+    else:
+        try:
+            path = './' + label + '/'
+            os.makedirs(path, exist_ok=False)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise    # Error when creating new folder/directory
+        try:
+            # originalImage.save(path_1 + outFile[0])  #no need regenerate original images? Maybe need, cause the origin directory is a mess
+            image.save('./' + str(label) + '/' + str(tag)+'.png')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
 '''
     This function is used to save the return image from function split_original_image() into files.
@@ -288,8 +392,8 @@ def save_images_to_files_process(originalImage, noodle_1, noodle_2, fileSavePath
 
 if __name__ == '__main__':
     ###prototype 1 deal with one image:
-    process = 'prototype1'
-    if (process == 'prototype1'):
+    process = 'prototype2'
+    if (process == 'prototype2'):
         origin_iamge_path =  "../康师傅/2017.9.21/2017.9.21原图/"
         inFileName_relative = "leaper_09_20170114_130001131_0000005624.png"
         inFileName_absolute = origin_iamge_path + inFileName_relative
@@ -297,17 +401,24 @@ if __name__ == '__main__':
         print(original_image.format, original_image.size, original_image.mode)
         noodle_1_image, noodle_2_image = split_original_image(original_image)
         # show images: origin, split left, split right
-        original_image.show()
-        noodle_1_image.show()
-        noodle_2_image.show()
+        # original_image.show()
+        # noodle_1_image.show()
+        # noodle_2_image.show()
         # save_images_to_files_process(original_image, noodle_1_image, noodle_2_image)
         i1, i2, i3, i4, i5, i6 = get_helf_noodle_improved(noodle_1_image)
-        i1.show()
-        i2.show()
-        i3.show()
-        i4.show()
+        # i1.show()
+        # i2.show()
+        # i3.show()
+        # i4.show()
         i5.show()
         i6.show()
+        print("i1_image_size: ",i1.size, end=' || ')
+        print("i2_image_size: ",i2.size, end=' || ')
+        print("i3_image_size: ",i3.size, end=' || ')
+        print("i4_image_size: ",i4.size, end=' || ')
+        print("i5_image_size: ",i5.size, end=' || ')
+        print("i6_image_size: ",i6.size)
+
 
     ###prototype 2 image_batch_process:
     if (process == 'prototype2'):
@@ -321,11 +432,12 @@ if __name__ == '__main__':
         print("image name: ", imageNames)
         print("image path: ", imagePaths)
         print("image name-folder: ", image_Name_IncludingFolder)
-        testprint("This is a test: ")
-        testprint(image_Name_IncludingFolder[imageNames[0]][1] )
+        # testprint("This is a test: ")
+        # testprint(image_Name_IncludingFolder[imageNames[0]][1])
         imageCount = len(imageNames)
         if len(imageNames) == len(imagePaths):
             print("There are ", imageCount, " images to be processed")
-        split_images_in_batch_and_save(len(imageNames), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
+        # split_images_in_batch_and_save(len(imageNames), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
+        split_images_in_batch_and_save(5, imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
 
-
+    ###prototype 3 .xlsx .xml parsing:
