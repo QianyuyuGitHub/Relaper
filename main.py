@@ -28,8 +28,12 @@ def testprint(display_data):
         file_path = the path you want to explore
         is_test = whether it's a test mode or real implementation
     :returns
-        image_name = dict contains all the image names 
-        image_path = dict contains all the images' path
+        image_names = list contains all the image names 
+        image_paths = list contains all the images' path
+        image_filename_Includingfolder = dict contains image imageName as key, [former directory, whole path] as value
+        xml_names = list of xml file names 
+        xml_paths = list of xml file paths
+        xml_filename_Includingfolder = dict contains xml fileName as key, [former directory, whole path] as value
 '''
 def get_all_image_names(file_path, is_test):
     image_names = []
@@ -106,21 +110,21 @@ def get_all_image_names(file_path, is_test):
     :arg
         image = the original image you want to deal with(only one, and should be the image type)
     :returns
-        noodel_* = the No.* noodel sub_image in the original image    
+        noodle_* = the No.* noodle sub_image in the original image    
 '''
 def split_original_image(image):
     box_1 = (280, 90, 610, 420)
     box_2 = (680, 90, 1010, 420)
     # original_image = Image.open(fileNameWithPath) # to prevent from doing open and close operators too frequently, not here, use in main
-    noodel_1 = original_image.crop(box_1)
-    noodel_2 = original_image.crop(box_2)
+    noodle_1 = original_image.crop(box_1)
+    noodle_2 = original_image.crop(box_2)
     ##Uesd to show images on screen
-    # noodel_1.show()
-    # noodel_2.show()
-    return noodel_1, noodel_2
+    # noodle_1.show()
+    # noodle_2.show()
+    return noodle_1, noodle_2
 
 '''
-    This function is an improved version of function get_half_noodel()
+    This function is an improved version of function get_half_noodle()
     
     :arg
         noodle_only = the image only with noodle 
@@ -128,7 +132,7 @@ def split_original_image(image):
     :returns
         ...* = all the half of the noodle image, 330 * 165
 '''
-def get_helf_noodel_improved(noodle_only, up_left_x = 0, up_left_y = 0, down_right_x = 330, down_right_y = 330):
+def get_helf_noodle_improved(noodle_only, up_left_x = 0, up_left_y = 0, down_right_x = 330, down_right_y = 330):
     pixel = 330
     box_horizontal_left = (up_left_x, up_left_y, down_right_x - pixel/2, down_right_y)
     box_horizontal_right = (up_left_x - pixel/2, up_left_y, down_right_x, down_right_y)
@@ -194,14 +198,22 @@ def get_half_noodle(image):
     
     :arg
         process_num = the num of images that you want to peocess
+        imageNames = name list of images
+        imagePaths = path list of images 
+        image_Name_IncludingFolder = ...
+        xmlName = ...
+        xmlPaths = ...
+        xml_Name_IncludingFolder = ...
     :returns
         None
 '''
-def split_images_in_batch(process_num, imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder):
+def split_images_in_batch_and_save(process_num, imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder):
     imageCount = 0
     for image in imageNames:
+        original_image = Image.open(image_Name_IncludingFolder[image][1]) #find
+        noodle_image1, noodle_image2 = split_original_image()
         part_horizontal_left, part_horizontal_right, part_longitudinal_up, part_longitudinal_down,\
-        part_cross_center, part_vertical_center = get_helf_noodel_improved(image)
+        part_cross_center, part_vertical_center = get_helf_noodle_improved(image)
         save_image_to_files_standerd(part_horizontal_left, )
 
         imageCount += 1
@@ -215,48 +227,49 @@ def split_images_in_batch(process_num, imageNames, imagePaths, image_Name_Includ
     :returns
         None
 '''
-def save_image_to_files_standerd(image, label, tag, directory = ''):
+def save_image_to_files_standerd(images, label, tag, directory = ''):
     if directory:
         for image in images:
             image.save(directory+str(tag)+'.png')
     else:
-        try:
-            # originalImage.save(path_1 + outFile[0])  #no need regenerate original images? Maybe need, casue the original directory is a mess
-            image.save(str(tag)+'.png')
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+        for image in images:
+            try:
+                # originalImage.save(path_1 + outFile[0])  #no need regenerate original images? Maybe need, cause the origin directory is a mess
+                image.save('./' + str(label) + '/' + str(tag)+'.png')
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
 
 '''
     This function is used to save the return image from function split_original_image() into files.
     
     :arg
         originalImage = the original image unsplit
-        noodel_* = the No.* image of splits
+        noodle_* = the No.* image of splits
         fileSavePath = the path you want to preserve the new input images 
         count = used for batch saving task, it will name the image with count in middle name(dafult: count = 0) 
     :returns
         None
         
 '''
-def save_images_to_files_process(originalImage, noodel_1, noodel_2, fileSavePath = './OutputImage/', count = 0):
+def save_images_to_files_process(originalImage, noodle_1, noodle_2, fileSavePath = './OutputImage/', count = 0):
     count = 0
     # for infile in sys.argv[1:]:
     outFileName, outFileSuffix = os.path.splitext(inFileName_absolute)
     outFile = [] #deal with the name, cause need the original name to locate the image in directories quickly
-    temp = "noodel_lelf_" + str(count) + ".jpeg"
+    temp = "noodle_lelf_" + str(count) + ".jpeg"
     outFile.append(temp)
-    temp = "noodel_right_" + str(count) + ".jpeg"
+    temp = "noodle_right_" + str(count) + ".jpeg"
     outFile.append(temp)
     temp = "original_image_"+ str(count) + ".jpeg"
     outFile.append(temp)
     # if infile != outfile:
-    original_middle_path = "whole_noodel/"
-    noodel_only_path = "noodle_only/"
+    original_middle_path = "whole_noodle/"
+    noodle_only_path = "noodle_only/"
 
     path_1 = fileSavePath + original_middle_path
-    path_2 = fileSavePath + noodel_only_path
-    # path_3 = fileSavePath + noodel_only_path
+    path_2 = fileSavePath + noodle_only_path
+    # path_3 = fileSavePath + noodle_only_path
     try:
         # os.makedirs(path_1, exist_ok=False)
         os.makedirs(path_2, exist_ok=False)
@@ -267,8 +280,8 @@ def save_images_to_files_process(originalImage, noodel_1, noodel_2, fileSavePath
 
     try:
         # originalImage.save(path_1 + outFile[0])  #no need regenerate original images? Maybe need, casue the original directory is a mess
-        noodel_1.save(path_2 + outFile[1])
-        noodel_2.save(path_2 + outFile[2])
+        noodle_1.save(path_2 + outFile[1])
+        noodle_2.save(path_2 + outFile[2])
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
@@ -282,13 +295,13 @@ if __name__ == '__main__':
         inFileName_absolute = origin_iamge_path + inFileName_relative
         original_image = Image.open(inFileName_absolute)#Image.open(origin_iamge_path + "leaper_09_20170114_130001131_0000005624.png")
         print(original_image.format, original_image.size, original_image.mode)
-        noodel_1_image, noodel_2_image = split_original_image(original_image)
+        noodle_1_image, noodle_2_image = split_original_image(original_image)
         # show images: origin, split left, split right
         original_image.show()
-        noodel_1_image.show()
-        noodel_2_image.show()
-        # save_images_to_files_process(original_image, noodel_1_image, noodel_2_image)
-        i1, i2, i3, i4, i5, i6 = get_helf_noodel_improved(noodel_1_image)
+        noodle_1_image.show()
+        noodle_2_image.show()
+        # save_images_to_files_process(original_image, noodle_1_image, noodle_2_image)
+        i1, i2, i3, i4, i5, i6 = get_helf_noodle_improved(noodle_1_image)
         i1.show()
         i2.show()
         i3.show()
@@ -308,9 +321,11 @@ if __name__ == '__main__':
         print("image name: ", imageNames)
         print("image path: ", imagePaths)
         print("image name-folder: ", image_Name_IncludingFolder)
+        testprint("This is a test: ")
+        testprint(image_Name_IncludingFolder[imageNames[0]][1] )
         imageCount = len(imageNames)
         if len(imageNames) == len(imagePaths):
             print("There are ", imageCount, " images to be processed")
-        split_images_in_batch(len(imageNames), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
+        split_images_in_batch_and_save(len(imageNames), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
 
 
