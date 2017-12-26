@@ -10,6 +10,7 @@ import re
 # Here I use pillow as a maintained fork of PIL
 from PIL import Image
 from os.path import join, getsize
+import openpyxl as xl # this is used to parse the .xlsx files
 
 
 
@@ -35,7 +36,7 @@ def testprint(display_data):
         xml_paths = list of xml file paths
         xml_filename_Includingfolder = dict contains xml fileName as key, [former directory, whole path] as value
 '''
-def get_all_image_names(file_path, is_test):
+def get_all_image_and_xml_files(file_path, is_test = 0):
     image_names = []
     image_paths = []
     image_filename_Includingfolder = {}
@@ -103,7 +104,51 @@ def get_all_image_names(file_path, is_test):
             # dirs.remove('不一致图片')  # don't visit 不一致图片 directories
             pass # you should deal with this situation
     return image_names, image_paths, image_filename_Includingfolder, xml_names, xml_paths, xml_filename_Includingfolder
-
+def get_all_xlsx_files(file_path, is_test = 0):
+    xlsx_names = []
+    xlsx_paths = []
+    xlsx_filename_Includingfolder = {}
+    for root, dirs, files in os.walk(file_path):
+        # print(root, "consumes", end=" ")
+        # print(sum(getsize(join(root, name)) for name in files), end=" ")
+        # print("bytes in", len(files), "non-directory files", end=" ")
+        # print(os.path.isdir(os.path.join(root, files)))
+        # print(root)
+        # the file_path = "./康师傅/", so each time get into another directory, should record the sub path
+        # if '不一致图片' in dirs:  # is there is no .xlsx ...
+        if dirs: # print the dirs only when it's a real directory(not a blank directory as: [])
+            testprint(dirs) # this is the directory names
+            testprint(root) # :) this is the root, so don't actually need to record the path anyway
+        for filesingle in files:
+            filename, suffix = os.path.splitext(filesingle)
+            if suffix == '.xlsx':
+            # if 0:
+                #use regular expression to get the includeing directory
+                folder = re.search(r'(../康师傅/)(.*(?=\\))(\\*)(.*)', root)
+                #group(2) is the first sub folder name
+                #group(1) is the file_path(inputed)
+                #group(0) is all combined
+                #group(4) is the second sub folder name
+                # test codes
+                # testprint(folder.group(0))
+                # testprint(folder.group(1))
+                # testprint(folder.group(2))
+                # testprint(folder.group(3))
+                # testprint(folder.group(4))
+                if folder: #it may be None if not match in RE
+                    if folder.group(4):
+                        xlsx_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(4)), str( file_path + folder.group(2) + '/' + folder.group(4) + '/' )]
+                        xlsx_names.append(str(filename+suffix))
+                        xlsx_paths.append(str( file_path + folder.group(2) + '/' + folder.group(4) + '/' ))
+                    elif folder.group(2):
+                        xlsx_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(2)), str( file_path + folder.group(2) )]
+                        xlsx_names.append(str(filename+suffix))
+                        xlsx_paths.append(str( file_path + folder.group(2) ))
+                    else:
+                        xlsx_filename_Includingfolder[str(filename + suffix)] = [str(file_path), str(file_path)]
+                        xlsx_names.append(str(filename+suffix))
+                        xlsx_paths.append(str(file_path))
+    return xlsx_names, xlsx_paths, xlsx_filename_Includingfolder
 '''
     This function is used to extract the noodle_only parts out of the original images which contains a lot of useless information
     
@@ -227,7 +272,7 @@ def split_images_in_batch_and_save(process_num, imageNames, imagePaths, image_Na
             if process_num == imageCount:
                 break
             # before save images to files, need to find out the label by parsing the .xml files:
-            parse_xml_file(xml_Name_IncludingFolder[image][1]+ )
+            # parse_xml_file(xml_Name_IncludingFolder[image][1]+ )
 
             original_image = Image.open(image_Name_IncludingFolder[image][1]+image)
             # here the noodle_image1 hasn't been refresh! but why is that？
@@ -392,7 +437,7 @@ def save_images_to_files_process(originalImage, noodle_1, noodle_2, fileSavePath
 
 if __name__ == '__main__':
     ###prototype 1 deal with one image:
-    process = 'prototype2'
+    process = 'prototype3'
     if (process == 'prototype2'):
         origin_iamge_path =  "../康师傅/2017.9.21/2017.9.21原图/"
         inFileName_relative = "leaper_09_20170114_130001131_0000005624.png"
@@ -425,7 +470,7 @@ if __name__ == '__main__':
         is_test = 1 #this is used for marking if it's in a test or not
         main_path = "../康师傅/"
         test_path = "./test/"
-        imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder = get_all_image_names(main_path, is_test)
+        imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder = get_all_image_and_xml_files(main_path, is_test)
         # print('xml name: ', xmlNames)
         # print('xml path: ', xmlPaths)
         # print('xml name-folder: ', xml_Name_IncludingFolder)
@@ -441,3 +486,30 @@ if __name__ == '__main__':
         split_images_in_batch_and_save(5, imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
 
     ###prototype 3 .xlsx .xml parsing:
+    if (process == 'prototype3'):
+        is_test = 1 #this is used for marking if it's in a test or not
+        main_path = "../康师傅/"
+        test_path = "./test/"
+        xlsxNames, xlsxPaths, xlsx_Name_IncludingFolder = get_all_xlsx_files(main_path, is_test)
+        print(".xml name: ", xlsxNames)
+        print(".xml path: ", xlsxPaths)
+        print(".xml name-folder: ", xlsx_Name_IncludingFolder)
+        # check the folder
+        def xlsx_parse():
+            pass
+        xlsx = xlsxNames[0]
+        xlsx_path = xlsx_Name_IncludingFolder[xlsx][1]
+        file = xlsx_path + xlsx
+        xlsx_sheets = xl.load_workbook(file, read_only= True) # read_only mode to deal with xlsx files
+
+        run = 1
+        while(run):
+            xlsx_first_sheet = xlsx_sheets['Sheet1']
+            ele = xlsx_first_sheet.cell(row=run+1, column=run+1)
+            testprint(ele.value)
+            if ele.value != 'OK':
+                run = 0
+                print("No OK")
+            else:
+                run += 1
+
