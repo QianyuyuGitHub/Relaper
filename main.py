@@ -2,26 +2,22 @@
 
 # import matplotlib.pyplot as plt
 # import tensorflow as tf
-import numpy as np
 import errno
 import os
-import sys
 import re
+
+import openpyxl as xl  # this is used to parse the .xlsx files
 # Here I use pillow as a maintained fork of PIL
 from PIL import Image
-from os.path import join, getsize
-import openpyxl as xl # this is used to parse the .xlsx files
-
-
 
 '''
     This function is a print function used to print temporary results
     
     :arg
 '''
-def testprint(display_data):
+def testprint(display_data, end_cus = '\n'):
     if is_test:
-        print(display_data)
+        print(display_data, end=end_cus)
 '''
     This function is used to get all the files' and sub_folders' name for further operation
     
@@ -34,7 +30,7 @@ def testprint(display_data):
         image_filename_Includingfolder = dict contains image imageName as key, [former directory, whole path] as value
         xml_names = list of xml file names 
         xml_paths = list of xml file paths
-        xml_filename_Includingfolder = dict contains xml fileName as key, [former directory, whole path] as value
+        xml_filename_Includingfolder = dict contains xml fileName as key, [former directory, whole path, #2former directory, #2whole path, #3former directory, #3whole path] as value
 '''
 def get_all_image_and_xml_files(file_path, is_test = 0):
     image_names = []
@@ -43,6 +39,8 @@ def get_all_image_and_xml_files(file_path, is_test = 0):
     xml_names = []
     xml_paths = []
     xml_filename_Includingfolder = {}
+    count1 = 0
+    count2 = 0
     for root, dirs, files in os.walk(file_path):
         # print(root, "consumes", end=" ")
         # print(sum(getsize(join(root, name)) for name in files), end=" ")
@@ -70,18 +68,34 @@ def get_all_image_and_xml_files(file_path, is_test = 0):
                 # testprint(folder.group(3))
                 # testprint(folder.group(4))
                 if folder: #it may be None if not match in RE
-                    if folder.group(4):
-                        xml_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(4)), str( file_path + folder.group(2) + '/' + folder.group(4) + '/' )]
-                        xml_names.append(str(filename+suffix))
-                        xml_paths.append(str( file_path + folder.group(2) + '/' + folder.group(4) + '/' ))
-                    elif folder.group(2):
-                        xml_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(2)), str( file_path + folder.group(2) )]
-                        xml_names.append(str(filename+suffix))
-                        xml_paths.append(str( file_path + folder.group(2) ))
+                    #if the .xml is not the only one, actually, they are not:
+                    if (str(filename + suffix)) in xml_filename_Includingfolder:
+                        # testprint("gocha!")
+                        if folder.group(4):
+                            xml_filename_Includingfolder[str(filename + suffix)].extend([str(folder.group(4)), str( file_path + folder.group(2) + '/' + folder.group(4) + '/' )])
+                            xml_names.append(str(filename+suffix))
+                            xml_paths.append(str( file_path + folder.group(2) + '/' + folder.group(4) + '/' ))
+                        elif folder.group(2):
+                            xml_filename_Includingfolder[str(filename + suffix)].extend([str(folder.group(2)), str( file_path + folder.group(2) )])
+                            xml_names.append(str(filename+suffix))
+                            xml_paths.append(str( file_path + folder.group(2) ))
+                        else:
+                            xml_filename_Includingfolder[str(filename + suffix)].extend([str(file_path), str(file_path)])
+                            xml_names.append(str(filename+suffix))
+                            xml_paths.append(str(file_path))
                     else:
-                        xml_filename_Includingfolder[str(filename + suffix)] = [str(file_path), str(file_path)]
-                        xml_names.append(str(filename+suffix))
-                        xml_paths.append(str(file_path))
+                        if folder.group(4):
+                            xml_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(4)), str(file_path + folder.group(2) + '/' + folder.group(4) + '/' )]
+                            xml_names.append(str(filename+suffix))
+                            xml_paths.append(str(file_path + folder.group(2) + '/' + folder.group(4) + '/' ))
+                        elif folder.group(2):
+                            xml_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(2)), str(file_path + folder.group(2) )]
+                            xml_names.append(str(filename+suffix))
+                            xml_paths.append(str(file_path + folder.group(2) ))
+                        else:
+                            xml_filename_Includingfolder[str(filename + suffix)] = [str(file_path), str(file_path)]
+                            xml_names.append(str(filename+suffix))
+                            xml_paths.append(str(file_path))
             if suffix == '.png':
             # if 0:
                 #use regular expression to get the includeing directory
@@ -103,51 +117,42 @@ def get_all_image_and_xml_files(file_path, is_test = 0):
         if '不一致图片' in dirs:
             # dirs.remove('不一致图片')  # don't visit 不一致图片 directories
             pass # you should deal with this situation
+    testprint('Image Total')
     return image_names, image_paths, image_filename_Includingfolder, xml_names, xml_paths, xml_filename_Includingfolder
 def get_all_xlsx_files(file_path, is_test = 0):
     xlsx_names = []
     xlsx_paths = []
     xlsx_filename_Includingfolder = {}
+    count = 0
     for root, dirs, files in os.walk(file_path):
-        # print(root, "consumes", end=" ")
-        # print(sum(getsize(join(root, name)) for name in files), end=" ")
-        # print("bytes in", len(files), "non-directory files", end=" ")
-        # print(os.path.isdir(os.path.join(root, files)))
-        # print(root)
-        # the file_path = "./康师傅/", so each time get into another directory, should record the sub path
-        # if '不一致图片' in dirs:  # is there is no .xlsx ...
-        if dirs: # print the dirs only when it's a real directory(not a blank directory as: [])
-            testprint(dirs) # this is the directory names
-            testprint(root) # :) this is the root, so don't actually need to record the path anyway
+        # if dirs: # print the dirs only when it's a real directory(not a blank directory as: [])
+        #     testprint("Directorys:", ' ')
+        #     testprint(dirs) # this is the directory names
+        #     testprint("Roots:", ' ')
+        #     testprint(root) # :) this is the root, so don't actually need to record the path anyway
         for filesingle in files:
             filename, suffix = os.path.splitext(filesingle)
+            # if suffix == '.xlsx':
+            #     print(filename)
+            #     print(suffix)
             if suffix == '.xlsx':
             # if 0:
                 #use regular expression to get the includeing directory
-                folder = re.search(r'(../康师傅/)(.*(?=\\))(\\*)(.*)', root)
-                #group(2) is the first sub folder name
-                #group(1) is the file_path(inputed)
-                #group(0) is all combined
-                #group(4) is the second sub folder name
-                # test codes
-                # testprint(folder.group(0))
-                # testprint(folder.group(1))
-                # testprint(folder.group(2))
-                # testprint(folder.group(3))
-                # testprint(folder.group(4))
-                if folder: #it may be None if not match in RE
-                    if folder.group(4):
-                        xlsx_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(4)), str( file_path + folder.group(2) + '/' + folder.group(4) + '/' )]
+                # folder = re.search(r'(../康师傅/)(.*(?=\\))(\\*)(.*)', root) #this is wrong
+                folder = re.search(r'(../康师傅)(/)(.*)', root)
+                # # test codes
+                # if folder:
+                #     testprint(folder.group(0))
+                #     testprint(folder.group(1))
+                #     testprint(folder.group(2))
+                #     testprint(folder.group(3))
+                if folder:
+                    if folder.group(3):
+                        xlsx_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(3)), str(file_path + folder.group(3) + '/')]
                         xlsx_names.append(str(filename+suffix))
-                        xlsx_paths.append(str( file_path + folder.group(2) + '/' + folder.group(4) + '/' ))
-                    elif folder.group(2):
-                        xlsx_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(2)), str( file_path + folder.group(2) )]
-                        xlsx_names.append(str(filename+suffix))
-                        xlsx_paths.append(str( file_path + folder.group(2) ))
-                    else:
-                        xlsx_filename_Includingfolder[str(filename + suffix)] = [str(file_path), str(file_path)]
-                        xlsx_names.append(str(filename+suffix))
-                        xlsx_paths.append(str(file_path))
+                        xlsx_paths.append(str( file_path + folder.group(3) + '/' ))
+                        count += 1
+    testprint(count)
     return xlsx_names, xlsx_paths, xlsx_filename_Includingfolder
 '''
     This function is used to extract the noodle_only parts out of the original images which contains a lot of useless information
@@ -435,10 +440,75 @@ def save_images_to_files_process(originalImage, noodle_1, noodle_2, fileSavePath
         if e.errno != errno.EEXIST:
             raise
 
+'''
+    This is function to determine if the .xml can be used to label the origin image data
+    :arg
+        xml_file_name
+        xml_Name_IncludingFolder 
+        xlsx_Name_Path_Dict
+    :returns
+        if this can be used?
+'''
+def Get_image_corresponding_xml(image_Name_IncludingFolder_xlsxFolder, xml_Name_IncludingFolder):
+    for image, folder_list in image_Name_IncludingFolder_xlsxFolder.items():
+        xlsx_folder = folder_list[2]
+
+    xml_file_root_folder = xml_Name_IncludingFolder[xml_file_name][0]
+
+    #.xlsx file processing, use a dict to store the result
+    xlsxRootFolder_imagesCorrespondingPersonName = {}
+    # xlsx_file_name_with_path = xlsx_Name_Path_Dict[xml_file_name][1] + xml_file_name + '.xlsx'
+    xlsx_sheets = xl.load_workbook(xlsx_file_name_with_path, read_only=True) # read_only mode to deal with xlsx files
+    run = 1
+    row_num = run + 1
+    column_num = run + 1
+    xlsx_first_sheet = xlsx_sheets['Sheet1']
+    run = 1
+    ele1 = xlsx_first_sheet.cell(row=1, column=2)
+    ele2 = xlsx_first_sheet.cell(row=1, column=3)
+    ele3 = xlsx_first_sheet.cell(row=1, column=4)
+    firstPersonName = ele1.value
+    secondPersonName = ele2.value
+    thirdPersonName = ele3.value
+    while(run): #this is first layer
+        ele = xlsx_first_sheet.cell(row=row_num, column=column_num)
+        if ele.value == 'OK':
+            testprint(firstPersonName, ': ')
+            testprint(ele.value)
+            row_num += 1
+            column_num += 0
+        elif ele.value is None:
+            testprint("The .xlsx file reach the end!")
+            run = 0
+        else:
+            testprint(' First person fail.', ' || ')
+            ele = xlsx_first_sheet.cell(row=row_num, column=column_num + 1)
+            if ele.value == 'OK':
+                testprint(secondPersonName, ': ')
+                testprint('OK')
+                row_num += 1
+                column_num += 0
+            else:
+                testprint(' Second person also fail.', ' || ')
+                ele = xlsx_first_sheet.cell(row=row_num, column=column_num + 2)
+                if ele.value == 'OK':
+                    testprint(thirdPersonName, ': ')
+                    testprint('OK')
+                    row_num += 1
+                    column_num += 0
+                else:
+                    testprint(' ALL FAILED: Located in ', end_cus=' Row: ')
+                    testprint(row_num, end_cus='')
+                    testprint(' Column: ', end_cus='')
+                    testprint(column_num)
+            row_num += 1
+
 if __name__ == '__main__':
     ###prototype 1 deal with one image:
-    process = 'prototype3'
-    if (process == 'prototype2'):
+    process = 'prototype4'
+
+
+    if (process == 'prototype1'):
         origin_iamge_path =  "../康师傅/2017.9.21/2017.9.21原图/"
         inFileName_relative = "leaper_09_20170114_130001131_0000005624.png"
         inFileName_absolute = origin_iamge_path + inFileName_relative
@@ -491,25 +561,152 @@ if __name__ == '__main__':
         main_path = "../康师傅/"
         test_path = "./test/"
         xlsxNames, xlsxPaths, xlsx_Name_IncludingFolder = get_all_xlsx_files(main_path, is_test)
-        print(".xml name: ", xlsxNames)
-        print(".xml path: ", xlsxPaths)
-        print(".xml name-folder: ", xlsx_Name_IncludingFolder)
+        print(".xlsx name: ", xlsxNames)
+        print(".xlsx path: ", xlsxPaths)
+        print(".xlsx name-folder: ", xlsx_Name_IncludingFolder)
         # check the folder
         def xlsx_parse():
             pass
         xlsx = xlsxNames[0]
         xlsx_path = xlsx_Name_IncludingFolder[xlsx][1]
         file = xlsx_path + xlsx
+        testprint(file)
         xlsx_sheets = xl.load_workbook(file, read_only= True) # read_only mode to deal with xlsx files
 
         run = 1
-        while(run):
-            xlsx_first_sheet = xlsx_sheets['Sheet1']
-            ele = xlsx_first_sheet.cell(row=run+1, column=run+1)
-            testprint(ele.value)
-            if ele.value != 'OK':
+        row_num = run + 1
+        column_num = run +1
+        xlsx_first_sheet = xlsx_sheets['Sheet1']
+        # replace all the testprint(ele.value) into detective result
+        ele1 = xlsx_first_sheet.cell(row=1, column=2)
+        ele2 = xlsx_first_sheet.cell(row=1, column=3)
+        ele3 = xlsx_first_sheet.cell(row=1, column=4)
+        firstPersonName = ele1.value
+        secondPersonName = ele2.value
+        thirdPersonName = ele3.value
+        while(run): #this is first layer
+            ele = xlsx_first_sheet.cell(row=row_num, column=column_num)
+            if ele.value == 'OK':
+                testprint(firstPersonName, ': ')
+                testprint(ele.value)
+                row_num += 1
+                column_num += 0
+            elif ele.value is None:
+                testprint("The .xlsx file reach the end!")
                 run = 0
-                print("No OK")
             else:
-                run += 1
+                testprint(' First person fail.', ' || ')
+                ele = xlsx_first_sheet.cell(row=row_num, column=column_num + 1)
+                if ele.value == 'OK':
+                    testprint(secondPersonName, ': ')
+                    testprint('OK')
+                    row_num += 1
+                    column_num += 0
+                else:
+                    testprint(' Second person also fail.', ' || ')
+                    ele = xlsx_first_sheet.cell(row=row_num, column=column_num + 2)
+                    if ele.value == 'OK':
+                        testprint(thirdPersonName, ': ')
+                        testprint('OK')
+                        row_num += 1
+                        column_num += 0
+                    else:
+                        testprint(' ALL FAILED: Located in ', end_cus=' Row: ')
+                        testprint(row_num, end_cus= '')
+                        testprint(' Column: ', end_cus='')
+                        testprint(column_num)
+                row_num += 1
 
+    ###prototype 4 .xml parsing
+    if (process == 'prototype4'):
+        is_test = 1 #this is used for marking if it's in a test or not
+        main_path = "../康师傅/"
+        test_path = "./test/"
+        imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder = get_all_image_and_xml_files(main_path, is_test)
+        print('xml name: ', xmlNames)
+        print('xml path: ', xmlPaths)
+        print('xml name-folder: ', xml_Name_IncludingFolder)
+        testprint(".xml files number in dict is: ", end_cus='')
+        testprint(len(image_Name_IncludingFolder))
+        # testprint("This is a test: ")
+        # testprint(image_Name_IncludingFolder[imageNames[0]][1])
+        imageCount = len(imageNames)
+        if len(imageNames) == len(imagePaths):
+            print("There are ", imageCount, " .png images to be processed")
+        # split_images_in_batch_and_save(len(imageNames), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
+        imageNames.sort()
+        imagePaths.sort()
+        xmlNames.sort()
+        xmlPaths.sort()
+        # print("image name: ", imageNames[:10])
+        # print("image path: ", imagePaths[:10])
+        # print("image name-folder: ", image_Name_IncludingFolder)
+        #@@@@@
+        image_Name_IncludingFolder_XLSXfolder = {}
+        for imageName, [last_layer_folder, whole_path] in image_Name_IncludingFolder.items():
+            folder = re.search(r'(../康师傅/)(.*?(?=/))(.*)', whole_path)
+            # test print
+            # testprint(folder.group(2))
+            # the third part of the list is the folder where .xlsx in,
+            image_Name_IncludingFolder_XLSXfolder[imageName] = [last_layer_folder, whole_path, folder.group(2)]
+        #@@@@@
+        xml_Folder_Name_wholePath = {}
+        for xml, list in xml_Name_IncludingFolder.items():
+            if len(list) == 2:
+                [xmlfolder, xml_whole_path] = list
+                folder1 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path)
+                if folder1:
+                    testprint(folder1.group(2), end_cus=' ')
+                    testprint(folder1.group(4))
+                if folder1:
+                    if folder1.group(2) not in xml_Folder_Name_wholePath:
+                        # xml_Folder_Name_wholePath[folder1.group(2)] = [xml, xmlfolder, xml_whole_path]
+                        xml_Folder_Name_wholePath[folder1.group(2)] = [{xml: [xmlfolder, xml_whole_path]}]
+                    else: # in fact after change list elements into dict, this situation will not occur, NOO! now, occur another!
+                        # xml_Folder_Name_wholePath[folder1.group(2)].extend([xml, xmlfolder, xml_whole_path])
+                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [xmlfolder, xml_whole_path]}])
+            elif len(list) == 4:
+                [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2] = list
+                folder1 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path)
+                folder2 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path2)
+                if folder1:
+                    testprint(folder1.group(2), end_cus=' ')
+                    testprint(folder1.group(4))
+                if folder2:
+                    testprint(folder2.group(2), end_cus=' ')
+                    testprint(folder2.group(4))
+                if folder1:
+                    if folder1.group(2) not in xml_Folder_Name_wholePath:
+                        # xml_Folder_Name_wholePath[folder1.group(2)] = [xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2]
+                        xml_Folder_Name_wholePath[folder1.group(2)] =[{xml: [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2]}]
+                    else: # in fact after change list elements into dict, this situation will not occur, NOO! now, occur another!
+                        # xml_Folder_Name_wholePath[folder1.group(2)].extend([xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2])
+                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2]}])
+            elif len(list) == 6:
+                [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3] = list
+                folder1 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path)
+                folder2 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path2)
+                folder3 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path3)
+                if folder1:
+                    testprint(folder1.group(2), end_cus=' ')
+                    testprint(folder1.group(4))
+                if folder2:
+                    testprint(folder2.group(2), end_cus=' ')
+                    testprint(folder2.group(4))
+                if folder3:
+                    testprint(folder3.group(2), end_cus=' ')
+                    testprint(folder3.group(4))
+                if folder1:
+                    if folder1.group(2) not in xml_Folder_Name_wholePath:
+                        # xml_Folder_Name_wholePath[folder1.group(2)] = [xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3]
+                        xml_Folder_Name_wholePath[folder1.group(2)] = [{xml: [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3]}]
+                    else:# in fact after change list elements into dict, this situation will not occur, NOO! now, occur another!
+                        # xml_Folder_Name_wholePath[folder1.group(2)].extend([xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3])
+                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3]}])
+            # folder = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=(\d|\s)))(.*)', xml_whole_path)
+        testprint("After trans, .xml dict size: ", end_cus='')
+        testprint(len(xml_Folder_Name_wholePath))
+        testprint(xml_Folder_Name_wholePath)
+        # print("image's corresponding .xml file root folder/ last-last-layer-folder: ", image_Name_IncludingFolder_XMLfolder)
+        # split_images_in_batch_and_save(len(imageName), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
+        # Get_image_corresponding_xml(image_Name_IncludingFolder_XLSXfolder, xml_Name_IncludingFolder)
