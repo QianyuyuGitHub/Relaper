@@ -653,7 +653,7 @@ def parse_xml_into_dict(xmlNames, xml_Name_IncludingFolder, mute = 1):
                                 ####better not to activate, too slow
                                 # print("(", x, ",", y, ")", end='--')
                                 if png_name.group(1) not in png_coordinate:
-                                    png_coordinate[png_name.group(1)] = [x, y]
+                                    png_coordinate[png_name.group(1)] = [[x, y]]
                                 else:
                                     png_coordinate[png_name.group(1)].append([x, y])
                                 count += 1
@@ -1019,6 +1019,6 @@ if __name__ == '__main__':
         ###Step2 end==========================================.
 
         ######################
-        
+        testprint(png_coordinate[png_name_list[0]])
 
 
