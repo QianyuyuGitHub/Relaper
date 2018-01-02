@@ -5,6 +5,7 @@
 import errno
 import os
 import re
+import xml.etree.ElementTree as ET
 
 import openpyxl as xl  # this is used to parse the .xlsx files
 # Here I use pillow as a maintained fork of PIL
@@ -15,9 +16,10 @@ from PIL import Image
     
     :arg
 '''
-def testprint(display_data, end_cus = '\n'):
+def testprint(display_data, end_cus = '\n', no_output = 0):
     if is_test:
-        print(display_data, end=end_cus)
+        if not no_output:
+            print(display_data, end=end_cus)
 '''
     This function is used to get all the files' and sub_folders' name for further operation
     
@@ -56,7 +58,7 @@ def get_all_image_and_xml_files(file_path, is_test = 0):
             if suffix == '.xml':
             # if 0:
                 #use regular expression to get the includeing directory
-                folder = re.search(r'(../康师傅/)(.*(?=\\))(\\*)(.*)', root)
+                folder = re.search(r'(../康师傅/)(.*(?=\\|/))(\\*|/)(.*)', root)
                 #group(2) is the first sub folder name
                 #group(1) is the file_path(inputed)
                 #group(0) is all combined
@@ -108,7 +110,7 @@ def get_all_image_and_xml_files(file_path, is_test = 0):
                     elif folder.group(2):
                         image_filename_Includingfolder[str(filename + suffix)] = [str(folder.group(2)), str( file_path + folder.group(2) )]
                         image_names.append(str(filename+suffix))
-                        image_paths.append(str( file_path + folder.group(2) ))
+                        image_paths.append(str(file_path + folder.group(2)))
                     else:
                         image_filename_Includingfolder[str(filename + suffix)] = [str(file_path), str(file_path)]
                         image_names.append(str(filename+suffix))
@@ -449,16 +451,29 @@ def save_images_to_files_process(originalImage, noodle_1, noodle_2, fileSavePath
     :returns
         if this can be used?
 '''
+# not done yet, but I don't think it should, just use any corresponding .xml file it can get, think over it later on
 def Get_image_corresponding_xml(image_Name_IncludingFolder_xlsxFolder, xml_Name_IncludingFolder):
     for image, folder_list in image_Name_IncludingFolder_xlsxFolder.items():
         xlsx_folder = folder_list[2]
 
     xml_file_root_folder = xml_Name_IncludingFolder[xml_file_name][0]
 
-    #.xlsx file processing, use a dict to store the result
-    xlsxRootFolder_imagesCorrespondingPersonName = {}
-    # xlsx_file_name_with_path = xlsx_Name_Path_Dict[xml_file_name][1] + xml_file_name + '.xlsx'
-    xlsx_sheets = xl.load_workbook(xlsx_file_name_with_path, read_only=True) # read_only mode to deal with xlsx files
+    main_path = "../康师傅/"
+    test_path = "./test/"
+    xlsxNames, xlsxPaths, xlsx_Name_IncludingFolder = get_all_xlsx_files(main_path, is_test)
+    print(".xlsx name: ", xlsxNames)
+    print(".xlsx path: ", xlsxPaths)
+    print(".xlsx name-folder: ", xlsx_Name_IncludingFolder)
+    # check the folder
+    def xlsx_parse():
+        pass
+    xlsx = xlsxNames[0]
+    xlsx_path = xlsx_Name_IncludingFolder[xlsx][1]
+    file = xlsx_path + xlsx
+    testprint(file)
+
+    xlsx_sheets = xl.load_workbook(file, read_only=True)# read_only mode to deal with xlsx files
+
     run = 1
     row_num = run + 1
     column_num = run + 1
@@ -503,11 +518,159 @@ def Get_image_corresponding_xml(image_Name_IncludingFolder_xlsxFolder, xml_Name_
                     testprint(column_num)
             row_num += 1
 
+def Relate_XML_with_Name_Path(image_Name_IncludingFolder):
+        image_Name_IncludingFolder_XLSXfolder = {}
+        for imageName, [last_layer_folder, whole_path] in image_Name_IncludingFolder.items():
+            folder = re.search(r'(../康师傅/)(.*?(?=/|\\))(.*)', whole_path)
+            # test print
+            # testprint(folder.group(2))
+            # the third part of the list is the folder where .xlsx in,
+            image_Name_IncludingFolder_XLSXfolder[imageName] = [last_layer_folder, whole_path, folder.group(2)]
+        #@@@@@
+        xml_Folder_Name_wholePath = {}
+        for xml, list in xml_Name_IncludingFolder.items():
+            if len(list) == 2:
+                [xmlfolder, xml_whole_path] = list
+                folder1 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path)
+                if not folder1:
+                    testprint("NONONO!")
+                if folder1:
+                    testprint(folder1.group(2), end_cus=' ')
+                    testprint(folder1.group(4))
+                if folder1:
+                    if folder1.group(2) not in xml_Folder_Name_wholePath:
+                        # xml_Folder_Name_wholePath[folder1.group(2)] = [xml, xmlfolder, xml_whole_path]
+                        xml_Folder_Name_wholePath[folder1.group(2)] = [{xml: [folder1.group(4), xml_whole_path]}]
+                    else: # in fact after change list elements into dict, this situation will not occur, NOO! now, occur another!
+                        # xml_Folder_Name_wholePath[folder1.group(2)].extend([xml, xmlfolder, xml_whole_path])
+                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [folder1.group(4), xml_whole_path]}])
+            elif len(list) == 4:
+                [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2] = list
+                folder1 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path)
+                folder2 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path2)
+                if not folder1:
+                    testprint("NONONO!")
+                if folder1:
+                    testprint(folder1.group(2), end_cus=' ')
+                    testprint(folder1.group(4))
+                if folder2:
+                    testprint(folder2.group(2), end_cus=' ')
+                    testprint(folder2.group(4))
+                if folder1:
+                    if folder1.group(2) not in xml_Folder_Name_wholePath:
+                        # xml_Folder_Name_wholePath[folder1.group(2)] = [xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2]
+                        xml_Folder_Name_wholePath[folder1.group(2)] =[{xml: [folder1.group(4), xml_whole_path, folder2.group(4), xml_whole_path2]}]
+                    else: # in fact after change list elements into dict, this situation will not occur, NOO! now, occur another!
+                        # xml_Folder_Name_wholePath[folder1.group(2)].extend([xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2])
+                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [folder1.group(4), xml_whole_path, folder2.group(4), xml_whole_path2]}])
+            elif len(list) == 6:
+                [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3] = list
+                folder1 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path)
+                folder2 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path2)
+                folder3 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path3)
+                if not folder1:
+                    testprint("NONONO!")
+                if folder1:
+                    testprint(folder1.group(2), end_cus=' ')
+                    testprint(folder1.group(4))
+                if folder2:
+                    testprint(folder2.group(2), end_cus=' ')
+                    testprint(folder2.group(4))
+                if folder3:
+                    testprint(folder3.group(2), end_cus=' ')
+                    testprint(folder3.group(4))
+                if folder1:
+                    if folder1.group(2) not in xml_Folder_Name_wholePath:
+                        # xml_Folder_Name_wholePath[folder1.group(2)] = [xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3]
+                        xml_Folder_Name_wholePath[folder1.group(2)] = [{xml: [folder1.group(4), xml_whole_path, folder2.group(4), xml_whole_path2, folder3.group(4), xml_whole_path3]}]
+                    else:# in fact after change list elements into dict, this situation will not occur, NOO! now, occur another!
+                        # xml_Folder_Name_wholePath[folder1.group(2)].extend([xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3])
+                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [folder1.group(4), xml_whole_path, folder2.group(4), xml_whole_path2, folder3.group(4), xml_whole_path3]}])
+            # folder = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=(\d|\s)))(.*)', xml_whole_path)
+
+        testprint("After trans, .xml dict size: ", end_cus='')
+        testprint(len(xml_Folder_Name_wholePath))
+        testprint(xml_Folder_Name_wholePath)
+
+        # print("image's corresponding .xml file root folder/ last-last-layer-folder: ", image_Name_IncludingFolder_XMLfolder)
+        # split_images_in_batch_and_save(len(imageName), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
+        # Get_image_corresponding_xml(image_Name_IncludingFolder_XLSXfolder, xml_Name_IncludingFolder)
+        for key, value in sorted(xml_Folder_Name_wholePath.items()):
+            try:
+              testCount
+            except NameError:
+                testCount = 0
+            else:
+                testCount += 1
+                testprint(key, end_cus=' || ')
+                testprint(value)
+        return xml_Folder_Name_wholePath
+
+def parse_xml_into_dict(xmlNames, xml_Name_IncludingFolder, mute = 1):
+    png_coordinate = {}
+    png_name_list = []
+    for xml in xmlNames:
+        png_name = re.search(r'(.+(?=\.))', xml)
+        # testprint(png_name.group(1))
+        png_name_list.append(png_name.group(1))
+        try:
+            tree = ET.parse(xml_Name_IncludingFolder[xml][1] + xml)
+        except IndexError:
+            raise Exception("There is a .xml file doesn't have corresponding file path")
+        root = tree.getroot()
+        for child in root: #most of the child subjects are <rigion>
+            for ch_child in child: #ch_child is either <id> or <points>
+                if ch_child.tag == 'id':
+                    if ch_child.text == '0': #if the <id> lable text is 0, then it's a fork!
+                        show_points = 1
+                        testprint(ch_child.tag, end_cus=' ',no_output=mute)
+                        testprint(ch_child.text, end_cus=' | ', no_output=mute)
+                else:
+                    if show_points == 1: #if the <id> label text is 0, the show_points will be set as 1
+                        testprint(ch_child.tag, end_cus=': ', no_output=mute)
+                        sliced_test = re.findall(r'(\d+(?=\D))', ch_child.text)
+                        # sliced_test = re.findall(r'(\d*?(?=\D))', ch_child.text)
+                        # testprint(sliced_test)
+                        count = 0
+                        x = None
+                        y = None
+                        for piece in sliced_test:
+                            # cut_test = piece.group(2)
+                            # testprint(cut_test, end_cus=' | \n')
+                            # print(type(cut_test))
+                            if (count % 2) == 0:
+                                # testprint(count)
+                                x = piece
+                                count += 1
+                            else:
+                                y = piece
+                                ####better not to activate, too slow
+                                testprint("<",end_cus='',no_output=mute)
+                                testprint(x,end_cus='',no_output=mute)
+                                testprint(",",end_cus='',no_output=mute)
+                                testprint(y,end_cus='',no_output=mute)
+                                testprint(")",end_cus='--',no_output=mute)
+                                ####better not to activate, too slow
+                                # print("(", x, ",", y, ")", end='--')
+                                if png_name.group(1) not in png_coordinate:
+                                    png_coordinate[png_name.group(1)] = [x, y]
+                                else:
+                                    png_coordinate[png_name.group(1)].append([x, y])
+                                count += 1
+                        show_points = 0
+        #open the corresponding .png file to process
+    testprint(png_coordinate)
+    testprint(png_name_list)
+    return png_coordinate, png_name_list
+
 if __name__ == '__main__':
+
+#############Switch###############
+    process = 'prototype6'
+##################################
+
+
     ###prototype 1 deal with one image:
-    process = 'prototype4'
-
-
     if (process == 'prototype1'):
         origin_iamge_path =  "../康师傅/2017.9.21/2017.9.21原图/"
         inFileName_relative = "leaper_09_20170114_130001131_0000005624.png"
@@ -617,9 +780,9 @@ if __name__ == '__main__':
                         testprint(column_num)
                 row_num += 1
 
-    ###prototype 4 .xml parsing
+    ###prototype 4 .xml parsing_part1
     if (process == 'prototype4'):
-        is_test = 1 #this is used for marking if it's in a test or not
+        is_test = 0 #this is used for marking if it's in a test or not
         main_path = "../康师傅/"
         test_path = "./test/"
         imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder = get_all_image_and_xml_files(main_path, is_test)
@@ -633,6 +796,11 @@ if __name__ == '__main__':
         imageCount = len(imageNames)
         if len(imageNames) == len(imagePaths):
             print("There are ", imageCount, " .png images to be processed")
+        xmlCount = len(xmlNames)
+        if len(xmlNames) == len(xmlPaths):
+            print("There are ", xmlCount, " .xml files found, And the correct number should be 11846!")
+            print("The size of dict is:", len(xml_Name_IncludingFolder))
+        print(xml_Name_IncludingFolder['leaper_09_20170114_130825709_0000006014.xml'])
         # split_images_in_batch_and_save(len(imageNames), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
         imageNames.sort()
         imagePaths.sort()
@@ -644,7 +812,7 @@ if __name__ == '__main__':
         #@@@@@
         image_Name_IncludingFolder_XLSXfolder = {}
         for imageName, [last_layer_folder, whole_path] in image_Name_IncludingFolder.items():
-            folder = re.search(r'(../康师傅/)(.*?(?=/))(.*)', whole_path)
+            folder = re.search(r'(../康师傅/)(.*?(?=/|\\))(.*)', whole_path)
             # test print
             # testprint(folder.group(2))
             # the third part of the list is the folder where .xlsx in,
@@ -655,20 +823,24 @@ if __name__ == '__main__':
             if len(list) == 2:
                 [xmlfolder, xml_whole_path] = list
                 folder1 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path)
+                if not folder1:
+                    testprint("NONONO!")
                 if folder1:
                     testprint(folder1.group(2), end_cus=' ')
                     testprint(folder1.group(4))
                 if folder1:
                     if folder1.group(2) not in xml_Folder_Name_wholePath:
                         # xml_Folder_Name_wholePath[folder1.group(2)] = [xml, xmlfolder, xml_whole_path]
-                        xml_Folder_Name_wholePath[folder1.group(2)] = [{xml: [xmlfolder, xml_whole_path]}]
+                        xml_Folder_Name_wholePath[folder1.group(2)] = [{xml: [folder1.group(4), xml_whole_path]}]
                     else: # in fact after change list elements into dict, this situation will not occur, NOO! now, occur another!
                         # xml_Folder_Name_wholePath[folder1.group(2)].extend([xml, xmlfolder, xml_whole_path])
-                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [xmlfolder, xml_whole_path]}])
+                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [folder1.group(4), xml_whole_path]}])
             elif len(list) == 4:
                 [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2] = list
                 folder1 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path)
                 folder2 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path2)
+                if not folder1:
+                    testprint("NONONO!")
                 if folder1:
                     testprint(folder1.group(2), end_cus=' ')
                     testprint(folder1.group(4))
@@ -678,15 +850,17 @@ if __name__ == '__main__':
                 if folder1:
                     if folder1.group(2) not in xml_Folder_Name_wholePath:
                         # xml_Folder_Name_wholePath[folder1.group(2)] = [xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2]
-                        xml_Folder_Name_wholePath[folder1.group(2)] =[{xml: [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2]}]
+                        xml_Folder_Name_wholePath[folder1.group(2)] =[{xml: [folder1.group(4), xml_whole_path, folder2.group(4), xml_whole_path2]}]
                     else: # in fact after change list elements into dict, this situation will not occur, NOO! now, occur another!
                         # xml_Folder_Name_wholePath[folder1.group(2)].extend([xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2])
-                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2]}])
+                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [folder1.group(4), xml_whole_path, folder2.group(4), xml_whole_path2]}])
             elif len(list) == 6:
                 [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3] = list
                 folder1 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path)
                 folder2 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path2)
                 folder3 = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=\d))(.*)', xml_whole_path3)
+                if not folder1:
+                    testprint("NONONO!")
                 if folder1:
                     testprint(folder1.group(2), end_cus=' ')
                     testprint(folder1.group(4))
@@ -699,14 +873,152 @@ if __name__ == '__main__':
                 if folder1:
                     if folder1.group(2) not in xml_Folder_Name_wholePath:
                         # xml_Folder_Name_wholePath[folder1.group(2)] = [xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3]
-                        xml_Folder_Name_wholePath[folder1.group(2)] = [{xml: [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3]}]
+                        xml_Folder_Name_wholePath[folder1.group(2)] = [{xml: [folder1.group(4), xml_whole_path, folder2.group(4), xml_whole_path2, folder3.group(4), xml_whole_path3]}]
                     else:# in fact after change list elements into dict, this situation will not occur, NOO! now, occur another!
                         # xml_Folder_Name_wholePath[folder1.group(2)].extend([xml, xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3])
-                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [xmlfolder, xml_whole_path, xmlfolder2, xml_whole_path2, xmlfolder3, xml_whole_path3]}])
+                        xml_Folder_Name_wholePath[folder1.group(2)].append([{xml: [folder1.group(4), xml_whole_path, folder2.group(4), xml_whole_path2, folder3.group(4), xml_whole_path3]}])
             # folder = re.search(r'(../康师傅/)(.*?(?=/))(/?)(.*?(?=(\d|\s)))(.*)', xml_whole_path)
+
         testprint("After trans, .xml dict size: ", end_cus='')
         testprint(len(xml_Folder_Name_wholePath))
         testprint(xml_Folder_Name_wholePath)
+
         # print("image's corresponding .xml file root folder/ last-last-layer-folder: ", image_Name_IncludingFolder_XMLfolder)
         # split_images_in_batch_and_save(len(imageName), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
         # Get_image_corresponding_xml(image_Name_IncludingFolder_XLSXfolder, xml_Name_IncludingFolder)
+        for key, value in sorted(xml_Folder_Name_wholePath.items()):
+            try:
+              testCount
+            except NameError:
+                testCount = 0
+            else:
+                testCount += 1
+                print(key, end='||')
+                print(value)
+
+    ###prototype 5 .xml parsing_part2
+    if (process == 'prototype5'):
+        is_test = 1 #this is used for marking if it's in a test or not
+        main_path = "../康师傅/"
+        test_path = "./test/"
+
+        ###Step1 begin========================================:
+        imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder = get_all_image_and_xml_files(main_path, is_test)
+        ###Step1 end==========================================.
+        print('xml name: ', xmlNames)
+        print('xml path: ', xmlPaths)
+        print('xml name-folder: ', xml_Name_IncludingFolder)
+        testprint(".xml files number in dict is: ", end_cus='')
+        testprint(len(image_Name_IncludingFolder))
+        imageCount = len(imageNames)
+        if len(imageNames) == len(imagePaths):
+            print("There are ", imageCount, " .png images to be processed")
+        xmlCount = len(xmlNames)
+        if len(xmlNames) == len(xmlPaths):
+            print("There are ", xmlCount, " .xml files found, And the correct number should be 11846!")
+            print("The size of dict is:", len(xml_Name_IncludingFolder))
+        # split_images_in_batch_and_save(len(imageNames), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
+        ###Step2 begin========================================:
+        xml_date_with_PersonName_and_path_dict = Relate_XML_with_Name_Path(image_Name_IncludingFolder)
+        ###Step2 end==========================================.
+        testprint(list(xml_date_with_PersonName_and_path_dict.items())[0:5])
+
+        ######################part2
+        testprint(xmlNames[0])
+        testprint(xml_Name_IncludingFolder[xmlNames[0]][1])
+
+        # for xml in xmlNames:
+        #     try:
+        #         xml_Name_IncludingFolder[xml][3]
+        #     except:
+        #         testprint(xml_Name_IncludingFolder[xml], end_cus=' || Index Error! \n')
+        png_coordinate = {}
+        png_name_list = []
+        for xml in xmlNames:
+            png_name = re.search(r'(.+(?=\.))', xml)
+            # testprint(png_name.group(1))
+            png_name_list.append(png_name.group(1))
+            try:
+                tree = ET.parse(xml_Name_IncludingFolder[xml][1] + xml)
+            except IndexError:
+                raise Exception("There is a .xml file doesn't have corresponding file path")
+            root = tree.getroot()
+            for child in root: #most of the child subjects are <rigion>
+                for ch_child in child: #ch_child is either <id> or <points>
+                    if ch_child.tag == 'id':
+                        if ch_child.text == '0': #if the <id> lable text is 0, then it's a fork!
+                            show_points = 1
+                            testprint(ch_child.tag, end_cus=' ')
+                            testprint(ch_child.text, end_cus=' | ')
+                    else:
+                        if show_points == 1: #if the <id> label text is 0, the show_points will be set as 1
+                            testprint(ch_child.tag, end_cus=': ')
+
+                            # testprint(ch_child.text, end_cus=' | ')
+                            sliced_test = re.findall(r'(\d+(?=\D))', ch_child.text)
+                            # sliced_test = re.findall(r'(\d*?(?=\D))', ch_child.text)
+                            # testprint(sliced_test)
+                            count = 0
+                            x = None
+                            y = None
+                            for piece in sliced_test:
+                                # cut_test = piece.group(2)
+                                # testprint(cut_test, end_cus=' | \n')
+                                # print(type(cut_test))
+                                if (count % 2) == 0:
+                                    # testprint(count)
+                                    x = piece
+                                    count += 1
+                                else:
+                                    y = piece
+                                    testprint("<",end_cus='')
+                                    testprint(x,end_cus='')
+                                    testprint(",",end_cus='')
+                                    testprint(y,end_cus='')
+                                    testprint(")",end_cus='--')
+                                    # print("(", x, ",", y, ")", end='--')
+                                    if png_name.group(1) not in png_coordinate:
+                                        png_coordinate[png_name.group(1)] = [x, y]
+                                    else:
+                                        png_coordinate[png_name.group(1)].append([x, y])
+                                    count += 1
+                            show_points = 0
+            #open the corresponding .png file to process
+        testprint(png_coordinate)
+        testprint(png_name_list)
+
+    ###prototype 6 .image_slice
+    if (process == 'prototype6'):
+        is_test = 1 #this is used for marking if it's in a test or not
+        main_path = "../康师傅/"
+        test_path = "./test/"
+
+        ###Step1 begin========================================:
+        imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder = get_all_image_and_xml_files(main_path, is_test)
+        ###Step1 end==========================================.
+        print('xml name: ', xmlNames)
+        print('xml path: ', xmlPaths)
+        print('xml name-folder: ', xml_Name_IncludingFolder)
+        testprint(".xml files number in dict is: ", end_cus='')
+        testprint(len(image_Name_IncludingFolder))
+        imageCount = len(imageNames)
+        if len(imageNames) == len(imagePaths):
+            print("There are ", imageCount, " .png images to be processed")
+        xmlCount = len(xmlNames)
+        if len(xmlNames) == len(xmlPaths):
+            print("There are ", xmlCount, " .xml files found, And the correct number should be 11846!")
+            print("The size of dict is:", len(xml_Name_IncludingFolder))
+        # split_images_in_batch_and_save(len(imageNames), imageNames, imagePaths, image_Name_IncludingFolder, xmlNames, xmlPaths, xml_Name_IncludingFolder)
+        ###Step2 begin========================================:
+        xml_date_with_PersonName_and_path_dict = Relate_XML_with_Name_Path(image_Name_IncludingFolder)
+        ###Step2 end==========================================.
+        testprint(list(xml_date_with_PersonName_and_path_dict.items())[0:5])
+
+        ###Step2 begin========================================:
+        png_coordinate, png_name_list = parse_xml_into_dict(xmlNames, xml_Name_IncludingFolder)
+        ###Step2 end==========================================.
+
+        ######################
+        
+
+
