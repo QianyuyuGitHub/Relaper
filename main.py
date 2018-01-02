@@ -1020,5 +1020,16 @@ if __name__ == '__main__':
 
         ######################
         testprint(png_coordinate[png_name_list[0]])
+        def check_coordinate(edge_x, edge_y):
+            file_type_list[]
+            coordType1 = [[280, 90, 610, 420], [680, 90, 1010, 420]]
+            coordType2 = [[70, 100, 400, 430], [470, 100, 800, 430], [870, 90, 1200, 420]]
+            coordType3 = [[260, 90, 590, 420], [665, 90, 995, 420]]
+            coordType4 = [[70, 95, 400, 425], [470, 100, 800, 430], [870, 90, 1200, 420]]
+            for [x_left_up, y_left_up, x_right_down, y_right_down] in coordType1:
+
+            pass
+
+
 
 
