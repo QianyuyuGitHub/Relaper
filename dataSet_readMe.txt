@@ -118,4 +118,26 @@ So I devided them manully:
 			2017.12.7 1
 	========Data_.pngType========
 
-	
+----------------------------------------------------
+###1/11/2018
+#found that some .xml files are empty
+
+
+									The Four Parts of A Sub Noodel Image
+		*( x_lu , y_lu )----------------*( (x_lu + x_rd)/2 , y_lu ) ------------------*( x_rd , y_lu )
+		       	|									  |										  |
+		       	|									  |										  |
+		       	|									  |										  |
+		       	|			Quadrant  	2			  |				Quadrant	1			  |
+		       	|									  |										  |
+		       	|									  |										  |
+		       	|									  |										  |
+ *( x_lu , (y_lu + y_rd)/2 )--------*( (x_lu + x_rd)/2 , (y_lu + y_rd)/2 )--------*( x_rd , (y_lu + y_rd)/2 )
+ 				|									  |										  |
+ 				|									  |										  |
+ 				|									  |										  |
+		       	|			Quadrant  	3			  |				Quadrant	4			  |
+ 				|									  |										  |
+ 				|									  |										  |
+ 				|									  |										  |
+		*( x_lu , y_rd )----------------*( (x_lu + x_rd)/2 , y_rd ) ------------------*( x_rd , y_rd )
