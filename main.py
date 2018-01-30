@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import openpyxl as xl  # this is used to parse the .xlsx files
 # Here I use pillow as a maintained fork of PIL
 from PIL import Image
+import ctypes  # An included library with Python install.
 
 '''
     This function is a print function used to print temporary results
@@ -175,8 +176,6 @@ def split_original_image(Image_wait_to_split):
     # noodle_2.show()
     return noodle_1, noodle_2
 
-<<<<<<< Updated upstream
-=======
 def split_original_image_imporved_version2(Image_wait_to_split, type_of_png):
     type_of_png -= 1
     Type_noodle_image_coorinates = [[(280, 90, 610, 420), (680, 90, 1010, 420)],
@@ -198,7 +197,6 @@ def split_original_image_imporved_version2(Image_wait_to_split, type_of_png):
         noodle_3 = Image_wait_to_split.crop(box_3)
         return noodle_1, noodle_2, noodle_3
 
->>>>>>> Stashed changes
 def split_original_image_improved(Image_wait_to_split, image_type):
     box_1 = (280, 90, 610, 420)
     box_2 = (680, 90, 1010, 420)
@@ -376,9 +374,6 @@ def split_images_in_batch_and_save(process_num, imageNames, imagePaths, image_Na
 def save_image_to_files_standerd(image, lable, tag, location, directory = ''):
     #lable is True/False of whether there is a folk in this sub_image, 1 for True, 0 for False, But there should be 2
     # for other types, as there will be 4 more sub_images don't belong to any type
-<<<<<<< Updated upstream
-    # Tag is Count_Number of images, just give them an ID
-=======
     # Tag is image name without suffix
     # image is a Image.open() type
     # location is where the sub image locates at noodle_image
@@ -414,27 +409,18 @@ def save_image_to_files_standerd_version2(image, lable, tag, location, directory
     #lable is True/False of whether there is a folk in this sub_image, 1 for True, 0 for False, But there should be 2
     # for other types, as there will be 4 more sub_images don't belong to any type
     # Tag is image name without suffix
->>>>>>> Stashed changes
     # image is a Image.open() type
     # location is where the sub image locates at noodle_image
     if directory:
         try:
-<<<<<<< Updated upstream
-            os.makedirs(directory + '/' + str(location) + '/', exist_ok=False)
-=======
             os.makedirs(directory + '/' + str(location) + '/' + str(lable) + '/', exist_ok=False)
->>>>>>> Stashed changes
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise    # Error when creating new folder/directory
             # for imageName in images:
             #     image = Image.open(imageName)
         try:
-<<<<<<< Updated upstream
-            image.save(directory + '/' + str(location) + '/' + str(tag) + '_' + str(lable) + '.png')
-=======
             image.save(directory + '/' + str(location) + '/' + str(lable) + '/' + str(tag) + '.png')
->>>>>>> Stashed changes
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
@@ -453,37 +439,22 @@ def save_image_to_files_standerd_version2(image, lable, tag, location, directory
             if e.errno != errno.EEXIST:
                 raise
 
-<<<<<<< Updated upstream
-def save_image_to_files_standerd_JPEG(image, lable, tag, location, directory = ''):
-    #lable is True/False of whether there is a folk in this sub_image, 1 for True, 0 for False, But there should be 2
-    # for other types, as there will be 4 more sub_images don't belong to any type
-    # Tag is Count_Number of images, just give them an ID
-=======
 def save_image_to_files_standerd_version3(image, lable, tag, location, directory = ''):
     #lable is True/False of whether there is a folk in this sub_image, 1 for True, 0 for False, But there should be 2
     # for other types, as there will be 4 more sub_images don't belong to any type
     # Tag is image name without suffix
->>>>>>> Stashed changes
     # image is a Image.open() type
     # location is where the sub image locates at noodle_image
     if directory:
         try:
-<<<<<<< Updated upstream
-            os.makedirs(directory + '/' + str(location) + '/', exist_ok=False)
-=======
             os.makedirs(directory + '/' + str(lable) + '/', exist_ok=False)
->>>>>>> Stashed changes
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise    # Error when creating new folder/directory
             # for imageName in images:
             #     image = Image.open(imageName)
         try:
-<<<<<<< Updated upstream
-            image.save(directory + '/' + str(location) + '/' + str(tag) + '_' + str(lable) + '.jpeg')
-=======
             image.save(directory + '/' + str(lable) + '/' + str(tag) + '_' + str(location) + '.png')
->>>>>>> Stashed changes
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
@@ -491,10 +462,6 @@ def save_image_to_files_standerd_version3(image, lable, tag, location, directory
     else:
         path = './' + lable + '/'
         try:
-<<<<<<< Updated upstream
-            path = './' + lable + '/'
-=======
->>>>>>> Stashed changes
             os.makedirs(path + '/' + str(location) + '/', exist_ok=False)
         except OSError as e:
             if e.errno != errno.EEXIST:
@@ -502,8 +469,6 @@ def save_image_to_files_standerd_version3(image, lable, tag, location, directory
         try:
             image.save(path + '/' + str(location) + '/' + str(tag) + '_' + str(lable) + '.png')
             # originalImage.save(path_1 + outFile[0])  #no need regenerate original images? Maybe need, cause the origin directory is a mess
-<<<<<<< Updated upstream
-=======
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
@@ -537,7 +502,6 @@ def save_image_to_files_standerd_JPEG(image, lable, tag, location, directory = '
                 raise    # Error when creating new folder/directory
         try:
             # originalImage.save(path_1 + outFile[0])  #no need regenerate original images? Maybe need, cause the origin directory is a mess
->>>>>>> Stashed changes
             image.save(path + '/' + str(location) + '/' + str(tag) + '_' + str(lable) + '.jpeg')
         except OSError as e:
             if e.errno != errno.EEXIST:
@@ -810,11 +774,7 @@ def parse_xml_into_dict(xmlNames, xml_Name_IncludingFolder, mute = 1):
     testprint(png_name_list)
     return png_coordinate, png_name_list
 
-<<<<<<< Updated upstream
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ to be continued
-=======
 #This version solve the problem that the "不一致图片" folders constaining .xml files with same file names, it will cause the coordinates wrong
->>>>>>> Stashed changes
 def parse_xml_into_dict_version2(xmlNames, xml_Name_IncludingFolder, mute = 1):
     png_coordinate = {}
     png_name_list = []
@@ -822,20 +782,6 @@ def parse_xml_into_dict_version2(xmlNames, xml_Name_IncludingFolder, mute = 1):
         png_name = re.search(r'(.+(?=\.))', xml)
         # testprint(png_name.group(1))
         png_name_list.append(png_name.group(1))
-<<<<<<< Updated upstream
-        try:
-            tree = ET.parse(xml_Name_IncludingFolder[xml][1] + xml)
-        except IndexError:
-            raise Exception("There is a .xml file doesn't have corresponding file path")
-        root = tree.getroot()
-        for child in root: #most of the child subjects are <rigion>
-            for ch_child in child: #ch_child is either <id> or <points>
-                sub_image_location_count = -1
-                sub_image_location_count_last_time = 0
-                if ch_child.tag == 'id':
-                    sub_image_location_count += 1
-                    if ch_child.text == '0': #if the <id> lable text is 0, then it's a fork!
-=======
         # testprint("Now I am in file:", end_cus=' ')
         # testprint(png_name.group(1), end_cus='-->')
         which_path = 1
@@ -857,7 +803,6 @@ def parse_xml_into_dict_version2(xmlNames, xml_Name_IncludingFolder, mute = 1):
                     if ch_child.text == '0': #if the <id> lable text is 0, then it's a fork!
                         # testprint("I Found A Folk, sub_image_location_count ++", end_cus="-->")
                         sub_image_location_count += 1
->>>>>>> Stashed changes
                         show_points = 1 # if the <id> lable text is 0, then get coordinates following the very next
                         testprint(ch_child.tag, end_cus=' ', no_output=mute)
                         testprint(ch_child.text, end_cus=' | ', no_output=mute)
@@ -891,18 +836,6 @@ def parse_xml_into_dict_version2(xmlNames, xml_Name_IncludingFolder, mute = 1):
                                 if png_name.group(1) not in png_coordinate:
                                     png_coordinate[png_name.group(1)] = [[x, y]]
                                 else:
-<<<<<<< Updated upstream
-                                    if sub_image_location_count_last_time == sub_image_location_count:
-                                        png_coordinate[png_name.group(1)][sub_image_location_count].append([x, y])
-                                    else:
-                                        png_coordinate[png_name.group(1)].extend([x, y])
-                                count += 1
-                            sub_image_location_count_last_time = sub_image_location_count
-                        show_points = 0
-        #open the corresponding .png file to process
-    testprint(png_coordinate)
-    testprint(png_name_list)
-=======
                                     png_coordinate[png_name.group(1)].append([x, y])
                                     # if sub_image_location_count_last_time == sub_image_location_count:
                                     #     png_coordinate[png_name.group(1)].append([x, y])
@@ -917,7 +850,6 @@ def parse_xml_into_dict_version2(xmlNames, xml_Name_IncludingFolder, mute = 1):
     #     testprint(png_coordinate)
     testprint(png_coordinate, no_output=1)
     testprint(png_name_list, no_output=1)
->>>>>>> Stashed changes
     return png_coordinate, png_name_list
 
 if __name__ == '__main__':
@@ -1272,10 +1204,6 @@ if __name__ == '__main__':
         testprint(list(xml_date_with_PersonName_and_path_dict.items())[0:5])
 
         ###Step3 begin========================================:
-<<<<<<< Updated upstream
-        png_coordinate, png_name_list = parse_xml_into_dict(xmlNames, xml_Name_IncludingFolder)
-        ###Step3 end==========================================.
-=======
         png_coordinate, png_name_list = parse_xml_into_dict_version2(xmlNames, xml_Name_IncludingFolder)
         ###Step3 end==========================================.
 
@@ -1715,6 +1643,129 @@ if __name__ == '__main__':
                 return 1000, 1000
             return max_type[1], min_type[1]
 
+        # this will not return the non_zero minimum type
+        def get_sub_png_lable_modified_2(sub_image_location, xml_type, corresponding_coordinate):
+            #sub_image_location should be 0/1/2
+            Type_noodle_image_coorinates = [[[280, 90, 610, 420], [680, 90, 1010, 420]],
+                                            [[70, 100, 400, 430], [470, 100, 800, 430], [870, 90, 1200, 420]],
+                                            [[260, 90, 590, 420], [665, 90, 995, 420]],
+                                            [[70, 95, 400, 425], [470, 100, 800, 430], [870, 90, 1200, 420]]]
+
+            # for noodle_image_coordinate in Type_noodle_image_coorinates[xml_type - 1]:
+            noodle_image_coordinate = Type_noodle_image_coorinates[xml_type - 1][sub_image_location]
+            #in every noodle part of sub_png_image
+            coodinates = corresponding_coordinate
+            rigion_1_int, rigion_2_int, rigion_3_int, rigion_4_int, rigion_5_int, rigion_6_int = get_six_rigion(noodle_image_coordinate)
+            rigion_1_points_count = 0
+            rigion_2_points_count = 0
+            rigion_3_points_count = 0
+            rigion_4_points_count = 0
+            rigion_5_points_count = 0
+            rigion_6_points_count = 0
+            miss_coordinates = 0
+            for [x_str, y_str] in coodinates:###########@@@@
+                x = int(x_str)
+                y = int(y_str)
+                counts_value = {}
+                if (rigion_1_int[0] <= x) and (rigion_1_int[2] >= x):
+                    if (rigion_1_int[1] <= y) and (rigion_1_int[3] >= y):
+                        rigion_1_points_count += 1
+                if (rigion_2_int[0] <= x) and (rigion_2_int[2] >= x):
+                    if (rigion_2_int[1] <= y) and (rigion_2_int[3] >= y):
+                        rigion_2_points_count += 1
+                if (rigion_3_int[0] <= x) and (rigion_3_int[2] >= x):
+                    if (rigion_3_int[1] <= y) and (rigion_3_int[3] >= y):
+                        rigion_3_points_count += 1
+                if (rigion_4_int[0] <= x) and (rigion_4_int[2] >= x):
+                    if (rigion_4_int[1] <= y) and (rigion_4_int[3] >= y):
+                        rigion_4_points_count += 1
+                if (rigion_5_int[0] <= x) and (rigion_5_int[2] >= x):
+                    if (rigion_5_int[1] <= y) and (rigion_5_int[3] >= y):
+                        rigion_5_points_count += 1
+                if (rigion_6_int[0] <= x) and (rigion_6_int[2] >= x):
+                    if (rigion_6_int[1] <= y) and (rigion_6_int[3] >= y):
+                        rigion_6_points_count += 1
+                if (x < noodle_image_coordinate[0]) or (x > noodle_image_coordinate[2]) or (y < noodle_image_coordinate[1]) or (y > noodle_image_coordinate[3]):
+                    miss_coordinates += 1
+            testprint("The points number in each rigion are: ", end_cus='')
+            testprint(rigion_1_points_count, end_cus="||")
+            testprint(rigion_2_points_count, end_cus="||")
+            testprint(rigion_3_points_count, end_cus="||")
+            testprint(rigion_4_points_count, end_cus="||")
+            testprint(rigion_5_points_count, end_cus="||")
+            testprint(rigion_6_points_count)
+            counts_value['1'] = rigion_1_points_count
+            counts_value['2'] = rigion_2_points_count
+            counts_value['3'] = rigion_3_points_count
+            counts_value['4'] = rigion_4_points_count
+            counts_value['5'] = rigion_5_points_count
+            counts_value['6'] = rigion_6_points_count
+            if counts_value['1'] >= counts_value['2']:
+                temp1 = [counts_value['1'], 1]
+                temp2 = [counts_value['2'], 2]
+            else:
+                temp1 = [counts_value['2'], 2]
+                temp2 = [counts_value['1'], 1]
+
+            if counts_value['3'] >= counts_value['4']:
+                temp3 = [counts_value['3'], 3]
+                temp4 = [counts_value['4'], 4]
+            else:
+                temp3 = [counts_value['4'], 4]
+                temp4 = [counts_value['3'], 3]
+
+            if counts_value['5'] >= counts_value['6']:
+                temp5 = [counts_value['5'], 5]
+                temp6 = [counts_value['6'], 6]
+            else:
+                temp5 = [counts_value['6'], 6]
+                temp6 = [counts_value['5'], 5]
+
+            #max in  temp1, temp3, temp5:
+            if temp1[0] >= temp3[0]:
+                if temp1[0] >= temp5[0]:
+                    max_type = temp1
+                else:
+                    max_type = temp5
+            else:
+                if temp3[0] >= temp5[0]:
+                    max_type = temp3
+                else:
+                    max_type = temp5
+
+            # #min in temp2, temp4, temp6
+            # if temp2[0] <= temp4[0]:
+            #     if temp2[0] <= temp6[0]:
+            #         min_type = temp2
+            #     else:
+            #         min_type = temp6
+            # else:
+            #     if temp4[0] <= temp6[0]:
+            #         min_type = temp4
+            #     else:
+            #         min_type = temp6
+            if temp2[0] == 0:
+                min_type = temp2
+            elif temp4[0] == 0:
+                min_type = temp4
+            elif temp6[0] == 0:
+                min_type = temp6
+            else:
+                min_type = [1000, 1000]
+            # testprint(type(max_type[1]))
+            # if max_type[1] > 0:
+            #     testprint("Max in quadrant ", end_cus='')
+            #     testprint(max_type[1], end_cus='. ')
+            #     testprint("Min in quadrant ", end_cus='')
+            #     testprint(min_type[1])
+            #     return max_type[1], min_type[1]
+            # else:
+            #     testprint("The maximum value is 0!")
+            if max_type[0] == 0:
+                testprint("There is a no noodle sub_image!~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                return 1000, 1000
+            return max_type[1], min_type[1]
+
         def save_png_with_lable(png_name_without_suffix, xml_type, corresponding_coordinate):
             image_Name_IncludingFolder_cannot_find_png_count = 0
             png_name_with_suffix = png_name_without_suffix + '.png'
@@ -1788,6 +1839,82 @@ if __name__ == '__main__':
                             save_image_to_files_standerd_version2(image_to_save[i], 0, png_name_without_suffix, int(i + 1), '../NewData/')
                         else:
                             save_image_to_files_standerd_version2(image_to_save[i], 2, png_name_without_suffix, int(i + 1), '../NewData/')
+            return image_Name_IncludingFolder_cannot_find_png_count
+
+        #@@@@
+        def save_png_with_lable_improved(png_name_without_suffix, xml_type, corresponding_coordinate, new_data_save_path='../NewDataImproved/'):
+            image_Name_IncludingFolder_cannot_find_png_count = 0
+            png_name_with_suffix = png_name_without_suffix + '.png'
+            try:
+                noodle_image_name_with_suffix_and_path = image_Name_IncludingFolder[png_name_with_suffix][1] + png_name_with_suffix
+            except:
+                image_Name_IncludingFolder_cannot_find_png_count += 1
+            try:
+                original_image = Image.open(noodle_image_name_with_suffix_and_path)
+            except:
+                return 0
+            # noodle_image1, noodle_image2 = split_original_image_imporved(original_image, xml_type)
+            if xml_type == 1 or xml_type == 3:
+                noodle_image1, noodle_image2 = split_original_image_imporved_version2(original_image, xml_type)
+                noodle1_label_max, noodle1_label_min = get_sub_png_lable_modified_2(0, xml_type, corresponding_coordinate)
+                noodle2_label_max, noodle2_label_min = get_sub_png_lable_modified_2(1, xml_type, corresponding_coordinate)
+            else:
+                noodle_image1, noodle_image2, noodle_image3 = split_original_image_imporved_version2(original_image, xml_type)
+                noodle1_label_max, noodle1_label_min = get_sub_png_lable_modified_2(0, xml_type, corresponding_coordinate)
+                noodle2_label_max, noodle2_label_min = get_sub_png_lable_modified_2(1, xml_type, corresponding_coordinate)
+                noodle3_label_max, noodle3_label_min = get_sub_png_lable_modified_2(2, xml_type, corresponding_coordinate)
+            if xml_type == 1 or xml_type == 3:
+                image_to_save = [None]*6
+                image_to_save[0], image_to_save[1], image_to_save[2], image_to_save[3], image_to_save[4], image_to_save[5] = get_helf_noodle_improved(noodle_image1)
+                if noodle1_label_max != 1000:
+                    for i in range(6):
+                        if i == int(noodle1_label_max - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 1, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        elif i == int(noodle1_label_min - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 0, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        else:
+                            save_image_to_files_standerd_version2(image_to_save[i], 2, png_name_without_suffix, int(i + 1), new_data_save_path)
+                image_to_save = [None]*6
+                image_to_save[0], image_to_save[1], image_to_save[2], image_to_save[3], image_to_save[4], image_to_save[5] = get_helf_noodle_improved(noodle_image2)
+                if noodle2_label_max != 1000:
+                    for i in range(6):
+                        if i == int(noodle2_label_max - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 1, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        elif i == int(noodle2_label_min - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 0, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        else:
+                            save_image_to_files_standerd_version2(image_to_save[i], 2, png_name_without_suffix, int(i + 1), new_data_save_path)
+            else:
+                image_to_save = [None]*6
+                image_to_save[0], image_to_save[1], image_to_save[2], image_to_save[3], image_to_save[4], image_to_save[5] = get_helf_noodle_improved(noodle_image1)
+                if noodle1_label_max != 1000:
+                    for i in range(6):
+                        if i == int(noodle1_label_max - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 1, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        elif i == int(noodle1_label_min - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 0, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        else:
+                            save_image_to_files_standerd_version2(image_to_save[i], 2, png_name_without_suffix, int(i + 1), new_data_save_path)
+                image_to_save = [None]*6
+                image_to_save[0], image_to_save[1], image_to_save[2], image_to_save[3], image_to_save[4], image_to_save[5] = get_helf_noodle_improved(noodle_image2)
+                if noodle2_label_max != 1000:
+                    for i in range(6):
+                        if i == int(noodle2_label_max - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 1, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        elif i == int(noodle2_label_min - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 0, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        else:
+                            save_image_to_files_standerd_version2(image_to_save[i], 2, png_name_without_suffix, int(i + 1), new_data_save_path)
+                image_to_save = [None]*6
+                image_to_save[0], image_to_save[1], image_to_save[2], image_to_save[3], image_to_save[4], image_to_save[5] = get_helf_noodle_improved(noodle_image3)
+                if noodle3_label_max != 1000:
+                    for i in range(6):
+                        if i == int(noodle3_label_max - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 1, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        elif i == int(noodle3_label_min - 1):
+                            save_image_to_files_standerd_version2(image_to_save[i], 0, png_name_without_suffix, int(i + 1), new_data_save_path)
+                        else:
+                            save_image_to_files_standerd_version2(image_to_save[i], 2, png_name_without_suffix, int(i + 1), new_data_save_path)
             return image_Name_IncludingFolder_cannot_find_png_count
 
         # testprint("Here is a test:")
@@ -1874,13 +2001,14 @@ if __name__ == '__main__':
                     # (type_of_corresponding_coordinate_xml)
                     # sub_image_location = type_of_corresponding_coordinate_xml
                     # get_sub_png_lable(png_image_name, sub_image_location, type_of_corresponding_coordinate_xml, corresponding_coordinate)
-                    image_Name_IncludingFolder_cannot_find_png_count += save_png_with_lable(png_image_name, type_of_corresponding_coordinate_xml, corresponding_coordinate)
+                    image_Name_IncludingFolder_cannot_find_png_count += save_png_with_lable_improved(png_image_name, type_of_corresponding_coordinate_xml, corresponding_coordinate)
                 corresponding_coordinate_last_time = corresponding_coordinate
             else:
                 testprint(delete_object + " still occur")
                 ##?????why after I delete the "colors", it still occur?
             # testprint(corresponding_coordinate)
         print("The count that image_Name_IncludingFolder cannot find png key: ", image_Name_IncludingFolder_cannot_find_png_count)
+        ctypes.windll.user32.MessageBoxW(0, "The new data process is done, please confirm", "Procedure Complete", 1)
         #########check the error and stufff:
         # testprint("There are ", end_cus='')
         # testprint(can_not_find, end_cus=" that can not be found!\n")
@@ -1910,238 +2038,5 @@ if __name__ == '__main__':
     #
     # print(Type_noodle_image_coorinates[0])
     # print(Type_noodle_image_coorinates[0][1])
->>>>>>> Stashed changes
 
 
-        # ######################
-        # # image_wait_to_slice_without_suffix = []
-        # # for image_wait_to_slice in imageNames:
-        # #     image_wait_to_slice_without_suffix_one = re.search(r'(.+(?=\.))', image_wait_to_slice).group(1)
-        # #     image_wait_to_slice_without_suffix.append(image_wait_to_slice_without_suffix_one)
-        # # print("image_wait_to_slice_without_suffix:", end=' ')
-        # # testprint(image_wait_to_slice_without_suffix)
-        #
-        # # image_wait_to_slice_without_suffix has "color" inside, have to get rid of it
-        # delete_object = 'colors'
-        # # if delete_object in png_name_list:
-        # #     delete_index = png_name_list.index(delete_object)
-        # #     testprint(delete_index, end_cus=" : ")
-        # #     testprint(png_name_list[delete_index])
-        # #     png_name_list.pop(delete_index)
-        # #     # del png_name_list[delete_index]
-        # #     testprint(delete_index, end_cus=" : ")
-        # #     testprint(png_name_list[delete_index])
-        # delete_count = 0
-        # for items in png_name_list:
-        #     if items == delete_object:
-        #         delete_index = png_name_list.index(items)
-        #         testprint(delete_index, end_cus=" : ")
-        #         testprint(png_name_list[delete_index])
-        #         png_name_list.pop(delete_index)
-        #         # del png_name_list[delete_index]
-        #         testprint(delete_index, end_cus=" : ")
-        #         testprint(png_name_list[delete_index])
-        #         delete_count += 1
-        # testprint("There are ", end_cus='')
-        # testprint(delete_count, end_cus=" has been deleted.\n")
-        #
-        # ###Step4 begin========================================:
-        # # png_coordinate, png_name_list
-        # Type1 = [(280, 90, 610, 420), (680, 90, 1010, 420)]
-        # Type2 = [(70, 100, 400, 430), (470, 100, 800, 430), (870, 90, 1200, 420)]
-        # Type3 = [(260, 90, 590, 420), (665, 90, 995, 420)]
-        # Type4 = [(70, 95, 400, 425), (470, 100, 800, 430), (870, 90, 1200, 420)]
-        #
-        # def which_type_xml_file_is(xml_file_name, xml_file_path):
-        #     type_list = {}
-        #     type_list['2017.9.21'] = 1
-        #     type_list['2017.9.22'] = 1
-        #     type_list['2017.9.25'] = 1
-        #     type_list['2017.9.26'] = 1
-        #     type_list['2017.9.27'] = 1
-        #     type_list['2017.9.28'] = 1
-        #     type_list['2017.9.29'] = 1
-        #     type_list['2017.9.30'] = 1
-        #     type_list['2017.10.9'] = 1
-        #     type_list['2017.10.10'] = 1
-        #     type_list['2017.10.11'] = 2
-        #     type_list['2017.10.12'] = 2
-        #     type_list['2017.10.13'] = 2
-        #     type_list['2017.10.16'] = 2
-        #     type_list['2017.10.17'] = 2
-        #     type_list['2017.10.18'] = 2
-        #     type_list['2017.10.19'] = 2
-        #     type_list['2017.10.20'] = 2
-        #     type_list['2017.10.23'] = 2
-        #     type_list['2017.10.24'] = 4
-        #     type_list['2017.10.25'] = 4
-        #     type_list['2017.10.26'] = 4
-        #     type_list['2017.10.27'] = 4
-        #     type_list['2017.10.30'] = 4
-        #     type_list['2017.10.31'] = 4
-        #     type_list['2017.11.01'] = 4
-        #     type_list['2017.11.02'] = 4
-        #     type_list['2017.11.03'] = 3
-        #     type_list['2017.11.06'] = 3
-        #     type_list['2017.11.07'] = 3
-        #     type_list['2017.11.09'] = 3
-        #     type_list['2017.11.14'] = 3
-        #     type_list['2017.11.16'] = 3
-        #     type_list['2017.11.17'] = 1
-        #     type_list['2017.11.20'] = 1
-        #     type_list['2017.11.24'] = 1
-        #     type_list['2017.12.4'] = 1
-        #     type_list['2017.12.5'] = 1
-        #     type_list['2017.12.6'] = 1
-        #     type_list['2017.12.7'] = 1
-        #     xml_file_name
-        #     folder_search = re.search(r'(.*?(?=\d))((\d|\.)*(?=\/))(.*)', xml_file_path)
-        #     testprint(folder_search.group(2), end_cus=" And type is: ")
-        #     type_of_this_file = type_list[folder_search.group(2)]
-        #     testprint(type_of_this_file)
-        #     return folder_search.group(2), type_of_this_file
-        #
-        # def get_four_quadrant(coodinate):
-        #     x_lu, y_lu, x_rd, y_rd = coodinate
-        #     quadrant_1 = [(x_lu + x_rd)/2, y_lu, x_rd, (y_lu + y_rd)/2]
-        #     quadrant_2 = [x_lu, y_lu, (x_lu + x_rd)/2, (y_lu + y_rd)/2]
-        #     quadrant_3 = [x_lu, (y_lu + y_rd)/2, (x_lu + x_rd)/2, y_rd]
-        #     quadrant_4 = [(x_lu + x_rd)/2, (y_lu + y_rd)/2, x_rd, y_rd]
-        #
-        #     quadrant_1_int = []
-        #     quadrant_2_int = []
-        #     quadrant_3_int = []
-        #     quadrant_4_int = []
-        #     for ele in quadrant_1:
-        #         quadrant_1_int.append(int(ele))
-        #     for ele in quadrant_2:
-        #         quadrant_2_int.append(int(ele))
-        #     for ele in quadrant_3:
-        #         quadrant_3_int.append(int(ele))
-        #     for ele in quadrant_4:
-        #         quadrant_4_int.append(int(ele))
-        #     return quadrant_1_int, quadrant_2_int, quadrant_3_int, quadrant_4_int
-        #
-        # def get_sub_png_lable(png_image_name, sub_image_location, xml_type, corresponding_coordinate):
-        #     #sub_image_location should be 0/1/2
-        #     Type_noodle_image_coorinates = [[(280, 90, 610, 420), (680, 90, 1010, 420)],
-        #                                     [(70, 100, 400, 430), (470, 100, 800, 430), (870, 90, 1200, 420)],
-        #                                     [(260, 90, 590, 420), (665, 90, 995, 420)],
-        #                                     [(70, 95, 400, 425), (470, 100, 800, 430), (870, 90, 1200, 420)]]
-        #     noodle_image_coordinate = Type_noodle_image_coorinates[xml_type - 1][sub_image_location]
-        #     coodinates = corresponding_coordinate
-        #     quadrant_1_int, quadrant_2_int, quadrant_3_int, quadrant_4_int = get_four_quadrant(noodle_image_coordinate)
-        #     quadrant_1_points_count, quadrant_2_points_count, quadrant_3_points_count, quadrant_4_points_count = 0
-        #     for [x, y] in coodinates:
-        #         counts_value = {}
-        #         if (quadrant_1_int[0] <= x) and (quadrant_1_int[2] >= x):
-        #             if (quadrant_1_int[1] <= y) and (quadrant_1_int[3] >= y):
-        #                 quadrant_1_points_count += 1
-        #         elif (quadrant_2_int[0] <= x) and (quadrant_2_int[2] >= x):
-        #             if (quadrant_2_int[1] <= y) and (quadrant_2_int[3] >= y):
-        #                 quadrant_2_points_count += 1
-        #         elif (quadrant_3_int[0] <= x) and (quadrant_3_int[2] >= x):
-        #             if (quadrant_3_int[1] <= y) and (quadrant_3_int[3] >= y):
-        #                 quadrant_3_points_count += 1
-        #         elif (quadrant_4_int[0] <= x) and (quadrant_4_int[2] >= x):
-        #             if (quadrant_4_int[1] <= y) and (quadrant_4_int[3] >= y):
-        #                 quadrant_4_points_count += 1
-        #         counts_value['1'] = quadrant_1_points_count
-        #         counts_value['2'] = quadrant_2_points_count
-        #         counts_value['3'] = quadrant_3_points_count
-        #         counts_value['4'] = quadrant_4_points_count
-        #         if counts_value['1'] >= counts_value['2']:
-        #             temp1 = [counts_value['1'], 1]
-        #             temp2 = [counts_value['2'], 2]
-        #         else:
-        #             temp1 = [counts_value['2'], 2]
-        #             temp2 = [counts_value['1'], 1]
-        #         if counts_value['3'] >= counts_value['4']:
-        #             temp3 = [counts_value['3'], 3]
-        #             temp4 = [counts_value['4'], 4]
-        #         else:
-        #             temp3 = [counts_value['4'], 4]
-        #             temp4 = [counts_value['3'], 3]
-        #         if temp1[0] >= temp2[0]:
-        #             max_type = temp1
-        #         else:
-        #             max_type = temp2
-        #         if temp3[0] <= temp4[0]:
-        #             min_type = temp3
-        #         else:
-        #             min_type = temp4
-        #         testprint(max_type[1], end_cus=' ')
-        #         testprint(min_type[1])
-        #     return max_type[1], min_type[1]
-        #
-        # def save_png_with_lable(png_name_without_suffix, xml_type, sub_image_location):
-        #     png_name_with_suffix = png_name_without_suffix + '.png'
-        #     noodle_image_name_with_suffix_and_path = image_Name_IncludingFolder[png_name_with_suffix][1] + png_name_with_suffix
-        #     original_image = Image.open(noodle_image_name_with_suffix_and_path)
-        #
-        #     noodle_image1, noodle_image2 = split_original_image(original_image)
-        #     # noodle_image =  noodle_image_name_with_suffix_and_path
-        #     i1, i2, i3, i4, i5, i6 = get_helf_noodle_improved(noodle_image1)
-        #     get_sub_png_lable(png_name_without_suffix, sub_image_location, xml_type, corresponding_coordinate)
-        #     save_image_to_files_standerd()
-        #     # save_image_to_files_standerd_JPEG()
-        #     i1, i2, i3, i4, i5, i6 = get_helf_noodle_improved(noodle_image2)
-        #
-        #
-        # can_not_find = 0
-        # Q1, Q2, Q3, Q4 = get_four_quadrant(Type1[0])
-        # testprint("Quadrant: ", end_cus='\n')
-        # testprint(Q2, end_cus='||')
-        # testprint(Q1)
-        # testprint(Q3, end_cus='||')
-        # testprint(Q4)
-        # corresponding_coordinate = None
-        # corresponding_coordinate_last_time = None
-        # for png_image_name in png_name_list:
-        #     if png_image_name != delete_object:
-        #         try:
-        #             corresponding_coordinate = png_coordinate[png_image_name]
-        #             #first, judge which type the .xml file blongs to
-        #         except:
-        #             #the reason that the .xml file coordinate can not be found is these .xml files are empty!!!!!!!
-        #             can_not_find += 1
-        #             # testprint("Can not find: ", end_cus='')
-        #             # testprint(png_image_name, end_cus='.xml\n')
-        #             # if (png_image_name + '.xml') in xmlNames:
-        #             #     testprint("But can find it in xmlNames list!\nThe origin path in xml_Name_IncludingFolder should be: ", end_cus='')
-        #             #     testprint(xml_Name_IncludingFolder[png_image_name + '.xml'])
-        #         if corresponding_coordinate != corresponding_coordinate_last_time:
-        #             corresponding_coordinate_xml_name = png_image_name + '.xml'
-        #             corresponding_coordinate_xml_path = xml_Name_IncludingFolder[corresponding_coordinate_xml_name][1]
-        #             corresponding_coordinate_xml_folder, type_of_corresponding_coordinate_xml = which_type_xml_file_is(corresponding_coordinate, corresponding_coordinate_xml_path)
-        #             # (type_of_corresponding_coordinate_xml)
-        #             # sub_image_location = type_of_corresponding_coordinate_xml
-        #             # get_sub_png_lable(png_image_name, sub_image_location, type_of_corresponding_coordinate_xml, corresponding_coordinate)
-        #             save_png_with_lable(png_image_name, type_of_corresponding_coordinate_xml)
-        #
-        #         corresponding_coordinate_last_time = corresponding_coordinate
-        #     else:
-        #         testprint(delete_object + " still occur")
-        #         ##?????why after I delete the "colors", it still occur?
-        #     # testprint(corresponding_coordinate)
-        # #########check the error and stufff:
-        # # testprint("There are ", end_cus='')
-        # # testprint(can_not_find, end_cus=" that can not be found!\n")
-        # # testprint("imageNames length:")
-        # # testprint(len(imageNames))
-        # # testprint("xmlNames length:")
-        # # testprint(len(xmlNames))
-        # # testprint("xml_Name_IncludingFolder length:")
-        # # testprint(len(xml_Name_IncludingFolder))
-        # # testprint("The length of png_coordinate and png_name_list are :", end_cus='')
-        # # testprint(len(png_coordinate), end_cus=' ')
-        # # testprint(len(png_name_list))
-        # # png_name_list_new = set(png_name_list)
-        # # testprint("After set, the length of png_name_list_new is : ", end_cus='')
-        # # testprint(len(png_name_list))
-        # ###Step4 end==========================================.
-        # # xml_file_path
-        # # folder_search = re.search(r'(.*(?=\d))(\d*(?=\/)(.*))' ,xml_file_path)
-        # # testprint(folder_search.group(2))
-        # # testprint(image_Name_IncludingFolder)
-        # # get_png_lable(png_name_list[0])
