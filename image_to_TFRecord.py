@@ -1,4 +1,3 @@
-
 # Copyright 2016 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,12 +72,12 @@ tf.app.flags.DEFINE_string('validation_directory', '../NewData_rotated_jpeg/',
 tf.app.flags.DEFINE_string('output_directory', './',
                            'Output data directory')
 
-tf.app.flags.DEFINE_integer('train_shards', 2,
+tf.app.flags.DEFINE_integer('train_shards', 1,
                             'Number of shards in training TFRecord files.')
-tf.app.flags.DEFINE_integer('validation_shards', 0,
+tf.app.flags.DEFINE_integer('validation_shards', 1,
                             'Number of shards in validation TFRecord files.')
 
-tf.app.flags.DEFINE_integer('num_threads', 2,
+tf.app.flags.DEFINE_integer('num_threads', 1,
                             'Number of threads to preprocess the images.')
 
 # The labels file contains a list of valid labels are held in this file.
