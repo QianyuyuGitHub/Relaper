@@ -7,8 +7,8 @@ from dir_traversal_tfrecord import tfrecord_auto_traversal
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-flags.DEFINE_integer("image_number", 3000, "Number of images in your tfrecord, default is 300.")
-flags.DEFINE_integer("class_number", 3, "Number of class in your dataset/label.txt, default is 3.")
+flags.DEFINE_integer("image_number", 882, "Number of images in your tfrecord, default is 300.")
+flags.DEFINE_integer("class_number", 2, "Number of class in your dataset/label.txt, default is 3.")
 flags.DEFINE_integer("image_height", 165, "Height of the output image after crop and resize. Default is 299.")
 flags.DEFINE_integer("image_width", 330, "Width of the output image after crop and resize. Default is 299.")
 
