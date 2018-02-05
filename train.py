@@ -1,159 +1,122 @@
-#  Copyright 2016 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2015 The TensorFlow Authors. All Rights Reserved.
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-"""Convolutional Neural Network Estimator for MNIST, built with tf.layers."""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
 
+"""A binary to train CIFAR-10 using a single GPU.
+Accuracy:
+read_train.py achieves ~86% accuracy after 100K steps (256 epochs of
+data) as judged by read_eval.py.
+Speed: With batch_size 128.
+System        | Step Time (sec/batch)  |     Accuracy
+------------------------------------------------------------------
+1 Tesla K20m  | 0.35-0.60              | ~86% at 60K steps  (5 hours)
+1 Tesla K40m  | 0.25-0.35              | ~86% at 100K steps (4 hours)
+Usage:
+Please see the tutorial and website for how to download the CIFAR-10
+data set, compile the program and train the model.
+http://tensorflow.org/tutorials/deep_cnn/
+"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import numpy as np
+from datetime import datetime
+import time
+
 import tensorflow as tf
 
-tf.logging.set_verbosity(tf.logging.INFO)
+import read
+
+FLAGS = tf.app.flags.FLAGS
+
+tf.app.flags.DEFINE_string('train_dir', '/tmp/read_train',
+                           """Directory where to write event logs """
+                           """and checkpoint.""")
+tf.app.flags.DEFINE_integer('max_steps', 1000000,
+                            """Number of batches to run.""")
+tf.app.flags.DEFINE_boolean('log_device_placement', False,
+                            """Whether to log device placement.""")
+tf.app.flags.DEFINE_integer('log_frequency', 10,
+                            """How often to log results to the console.""")
 
 
-def cnn_model_fn(features, labels, mode):
-  """Model function for CNN."""
-  # Input Layer
-  # Reshape X to 4-D tensor: [batch_size, width, height, channels]
-  # MNIST images are 28x28 pixels, and have one color channel
-  input_layer = tf.reshape(features["x"], [-1, 28, 28, 1])
+def train():
+  """Train CIFAR-10 for a number of steps."""
+  with tf.Graph().as_default():
+    global_step = tf.train.get_or_create_global_step()
 
-  # Convolutional Layer #1
-  # Computes 32 features using a 5x5 filter with ReLU activation.
-  # Padding is added to preserve width and height.
-  # Input Tensor Shape: [batch_size, 28, 28, 1]
-  # Output Tensor Shape: [batch_size, 28, 28, 32]
-  conv1 = tf.layers.conv2d(
-      inputs=input_layer,
-      filters=32,
-      kernel_size=[5, 5],
-      padding="same",
-      activation=tf.nn.relu)
+    # Get images and labels for CIFAR-10.
+    # Force input pipeline to CPU:0 to avoid operations sometimes ending up on
+    # GPU and resulting in a slow down.
+    with tf.device('/cpu:0'):
+      images, labels = read.distorted_inputs()
 
-  # Pooling Layer #1
-  # First max pooling layer with a 2x2 filter and stride of 2
-  # Input Tensor Shape: [batch_size, 28, 28, 32]
-  # Output Tensor Shape: [batch_size, 14, 14, 32]
-  pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
+    # Build a Graph that computes the logits predictions from the
+    # inference model.
+    logits = read.inference(images)
 
-  # Convolutional Layer #2
-  # Computes 64 features using a 5x5 filter.
-  # Padding is added to preserve width and height.
-  # Input Tensor Shape: [batch_size, 14, 14, 32]
-  # Output Tensor Shape: [batch_size, 14, 14, 64]
-  conv2 = tf.layers.conv2d(
-      inputs=pool1,
-      filters=64,
-      kernel_size=[5, 5],
-      padding="same",
-      activation=tf.nn.relu)
+    # Calculate loss.
+    loss = read.loss(logits, labels)
 
-  # Pooling Layer #2
-  # Second max pooling layer with a 2x2 filter and stride of 2
-  # Input Tensor Shape: [batch_size, 14, 14, 64]
-  # Output Tensor Shape: [batch_size, 7, 7, 64]
-  pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
+    # Build a Graph that trains the model with one batch of examples and
+    # updates the model parameters.
+    train_op = read.train(loss, global_step)
 
-  # Flatten tensor into a batch of vectors
-  # Input Tensor Shape: [batch_size, 7, 7, 64]
-  # Output Tensor Shape: [batch_size, 7 * 7 * 64]
-  pool2_flat = tf.reshape(pool2, [-1, 7 * 7 * 64])
+    class _LoggerHook(tf.train.SessionRunHook):
+      """Logs loss and runtime."""
 
-  # Dense Layer
-  # Densely connected layer with 1024 neurons
-  # Input Tensor Shape: [batch_size, 7 * 7 * 64]
-  # Output Tensor Shape: [batch_size, 1024]
-  dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+      def begin(self):
+        self._step = -1
+        self._start_time = time.time()
 
-  # Add dropout operation; 0.6 probability that element will be kept
-  dropout = tf.layers.dropout(
-      inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
+      def before_run(self, run_context):
+        self._step += 1
+        return tf.train.SessionRunArgs(loss)  # Asks for loss value.
 
-  # Logits layer
-  # Input Tensor Shape: [batch_size, 1024]
-  # Output Tensor Shape: [batch_size, 10]
-  logits = tf.layers.dense(inputs=dropout, units=10)
+      def after_run(self, run_context, run_values):
+        if self._step % FLAGS.log_frequency == 0:
+          current_time = time.time()
+          duration = current_time - self._start_time
+          self._start_time = current_time
 
-  predictions = {
-      # Generate predictions (for PREDICT and EVAL mode)
-      "classes": tf.argmax(input=logits, axis=1),
-      # Add `softmax_tensor` to the graph. It is used for PREDICT and by the
-      # `logging_hook`.
-      "probabilities": tf.nn.softmax(logits, name="softmax_tensor")
-  }
-  if mode == tf.estimator.ModeKeys.PREDICT:
-    return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+          loss_value = run_values.results
+          examples_per_sec = FLAGS.log_frequency * FLAGS.batch_size / duration
+          sec_per_batch = float(duration / FLAGS.log_frequency)
 
-  # Calculate Loss (for both TRAIN and EVAL modes)
-  loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
+          format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+                        'sec/batch)')
+          print (format_str % (datetime.now(), self._step, loss_value,
+                               examples_per_sec, sec_per_batch))
 
-  # Configure the Training Op (for TRAIN mode)
-  if mode == tf.estimator.ModeKeys.TRAIN:
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
-    train_op = optimizer.minimize(
-        loss=loss,
-        global_step=tf.train.get_global_step())
-    return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
-
-  # Add evaluation metrics (for EVAL mode)
-  eval_metric_ops = {
-      "accuracy": tf.metrics.accuracy(
-          labels=labels, predictions=predictions["classes"])}
-  return tf.estimator.EstimatorSpec(
-      mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+    with tf.train.MonitoredTrainingSession(
+        checkpoint_dir=FLAGS.train_dir,
+        hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
+               tf.train.NanTensorHook(loss),
+               _LoggerHook()],
+        config=tf.ConfigProto(
+            log_device_placement=FLAGS.log_device_placement)) as mon_sess:
+      while not mon_sess.should_stop():
+        mon_sess.run(train_op)
 
 
-def main(unused_argv):
-  # Load training and eval data
-  mnist = tf.contrib.learn.datasets.load_dataset("mnist")
-  train_data = mnist.train.images  # Returns np.array
-  train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
-  eval_data = mnist.test.images  # Returns np.array
-  eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
-
-  # Create the Estimator
-  mnist_classifier = tf.estimator.Estimator(
-      model_fn=cnn_model_fn, model_dir="/tmp/mnist_convnet_model")
-
-  # Set up logging for predictions
-  # Log the values in the "Softmax" tensor with label "probabilities"
-  tensors_to_log = {"probabilities": "softmax_tensor"}
-  logging_hook = tf.train.LoggingTensorHook(
-      tensors=tensors_to_log, every_n_iter=50)
-
-  # Train the model
-  train_input_fn = tf.estimator.inputs.numpy_input_fn(
-      x={"x": train_data},
-      y=train_labels,
-      batch_size=100,
-      num_epochs=None,
-      shuffle=True)
-  mnist_classifier.train(
-      input_fn=train_input_fn,
-      steps=20000,
-      hooks=[logging_hook])
-
-  # Evaluate the model and print results
-  eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-      x={"x": eval_data},
-      y=eval_labels,
-      num_epochs=1,
-      shuffle=False)
-  eval_results = mnist_classifier.evaluate(input_fn=eval_input_fn)
-  print(eval_results)
+def main(argv=None):  # pylint: disable=unused-argument
+  read.maybe_download_and_extract()
+  if tf.gfile.Exists(FLAGS.train_dir):
+    tf.gfile.DeleteRecursively(FLAGS.train_dir)
+  tf.gfile.MakeDirs(FLAGS.train_dir)
+  train()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   tf.app.run()

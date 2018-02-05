@@ -1,0 +1,64 @@
+Saving results to ./TFRecord/
+Determining list of input files and labels from ../NewData_rotated_jpeg/.
+Found 8822 JPEG files across 2 labels inside ../NewData_rotated_jpeg/.
+Launching 1 threads for spacings: [[0, 8822]]
+2018-02-01 16:50:06.560343: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\platform\cpu_feature_guard.cc:137] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX AVX2
+2018-02-01 16:50:06.870651: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1105] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti major: 6 minor: 1 memoryClockRate(GHz): 1.645
+pciBusID: 0000:17:00.0
+totalMemory: 11.00GiB freeMemory: 9.08GiB
+2018-02-01 16:50:07.006050: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1105] Found device 1 with properties: 
+name: GeForce GTX 1080 Ti major: 6 minor: 1 memoryClockRate(GHz): 1.645
+pciBusID: 0000:65:00.0
+totalMemory: 11.00GiB freeMemory: 9.08GiB
+2018-02-01 16:50:07.006399: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1120] Device peer to peer matrix
+2018-02-01 16:50:07.006582: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1126] DMA: 0 1 
+2018-02-01 16:50:07.006724: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1136] 0:   Y N 
+2018-02-01 16:50:07.006868: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1136] 1:   N Y 
+2018-02-01 16:50:07.007032: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1195] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:17:00.0, compute capability: 6.1)
+2018-02-01 16:50:07.007300: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1195] Creating TensorFlow device (/device:GPU:1) -> (device: 1, name: GeForce GTX 1080 Ti, pci bus id: 0000:65:00.0, compute capability: 6.1)
+2018-02-01 16:50:12.102765 [thread 0]: Wrote 882 images to ./TFRecord/validation-00000-of-00010
+2018-02-01 16:50:12.578067 [thread 0]: Processed 1000 of 8822 images in thread batch.
+2018-02-01 16:50:15.569983 [thread 0]: Wrote 882 images to ./TFRecord/validation-00001-of-00010
+2018-02-01 16:50:16.395218 [thread 0]: Processed 2000 of 8822 images in thread batch.
+2018-02-01 16:50:18.887849 [thread 0]: Wrote 882 images to ./TFRecord/validation-00002-of-00010
+2018-02-01 16:50:20.216379 [thread 0]: Processed 3000 of 8822 images in thread batch.
+2018-02-01 16:50:22.246697 [thread 0]: Wrote 882 images to ./TFRecord/validation-00003-of-00010
+2018-02-01 16:50:23.800557 [thread 0]: Processed 4000 of 8822 images in thread batch.
+2018-02-01 16:50:25.499093 [thread 0]: Wrote 883 images to ./TFRecord/validation-00004-of-00010
+2018-02-01 16:50:27.583619 [thread 0]: Processed 5000 of 8822 images in thread batch.
+2018-02-01 16:50:28.770740 [thread 0]: Wrote 882 images to ./TFRecord/validation-00005-of-00010
+2018-02-01 16:50:31.115010 [thread 0]: Processed 6000 of 8822 images in thread batch.
+2018-02-01 16:50:31.746671 [thread 0]: Wrote 882 images to ./TFRecord/validation-00006-of-00010
+2018-02-01 16:50:34.651413 [thread 0]: Processed 7000 of 8822 images in thread batch.
+2018-02-01 16:50:34.891015 [thread 0]: Wrote 882 images to ./TFRecord/validation-00007-of-00010
+2018-02-01 16:50:37.891029 [thread 0]: Wrote 882 images to ./TFRecord/validation-00008-of-00010
+2018-02-01 16:50:38.112617 [thread 0]: Processed 8000 of 8822 images in thread batch.
+2018-02-01 16:50:40.997666 [thread 0]: Wrote 883 images to ./TFRecord/validation-00009-of-00010
+2018-02-01 16:50:40.997666 [thread 0]: Wrote 8822 images to 8822 shards.
+2018-02-01 16:50:41.913993: Finished writing all 8822 images in data set.
+Determining list of input files and labels from ../NewData_rotated_jpeg/.
+2018-02-01 16:50:42.090253: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1195] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:17:00.0, compute capability: 6.1)
+2018-02-01 16:50:42.090535: I C:\tf_jenkins\workspace\rel-win\M\windows-gpu\PY\35\tensorflow\core\common_runtime\gpu\gpu_device.cc:1195] Creating TensorFlow device (/device:GPU:1) -> (device: 1, name: GeForce GTX 1080 Ti, pci bus id: 0000:65:00.0, compute capability: 6.1)
+Found 8822 JPEG files across 2 labels inside ../NewData_rotated_jpeg/.
+Launching 1 threads for spacings: [[0, 8822]]
+2018-02-01 16:50:46.136377 [thread 0]: Wrote 882 images to ./TFRecord/train-00000-of-00010
+2018-02-01 16:50:46.702879 [thread 0]: Processed 1000 of 8822 images in thread batch.
+2018-02-01 16:50:50.092903 [thread 0]: Wrote 882 images to ./TFRecord/train-00001-of-00010
+2018-02-01 16:50:51.201845 [thread 0]: Processed 2000 of 8822 images in thread batch.
+2018-02-01 16:50:54.346728 [thread 0]: Wrote 882 images to ./TFRecord/train-00002-of-00010
+2018-02-01 16:50:55.950979 [thread 0]: Processed 3000 of 8822 images in thread batch.
+2018-02-01 16:50:58.424523 [thread 0]: Wrote 882 images to ./TFRecord/train-00003-of-00010
+2018-02-01 16:51:00.481027 [thread 0]: Processed 4000 of 8822 images in thread batch.
+2018-02-01 16:51:02.481352 [thread 0]: Wrote 883 images to ./TFRecord/train-00004-of-00010
+2018-02-01 16:51:05.315849 [thread 0]: Processed 5000 of 8822 images in thread batch.
+2018-02-01 16:51:06.831880 [thread 0]: Wrote 882 images to ./TFRecord/train-00005-of-00010
+2018-02-01 16:51:09.806547 [thread 0]: Processed 6000 of 8822 images in thread batch.
+2018-02-01 16:51:10.627771 [thread 0]: Wrote 882 images to ./TFRecord/train-00006-of-00010
+2018-02-01 16:51:14.618382 [thread 0]: Processed 7000 of 8822 images in thread batch.
+2018-02-01 16:51:14.887057 [thread 0]: Wrote 882 images to ./TFRecord/train-00007-of-00010
+2018-02-01 16:51:18.813500 [thread 0]: Wrote 882 images to ./TFRecord/train-00008-of-00010
+2018-02-01 16:51:19.094284 [thread 0]: Processed 8000 of 8822 images in thread batch.
+2018-02-01 16:51:22.932329 [thread 0]: Wrote 883 images to ./TFRecord/train-00009-of-00010
+2018-02-01 16:51:22.932329 [thread 0]: Wrote 8822 images to 8822 shards.
+2018-02-01 16:51:23.196985: Finished writing all 8822 images in data set.
