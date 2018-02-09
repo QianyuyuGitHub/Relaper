@@ -1,0 +1,37 @@
+
+
+# TensoeFlow
+
+## Import Data
+> `tf.data` API提供了从简单复用的Pieces构建复杂输入管线的能力。 
+
+> 传统的图像管线方法是： 
+> - 1.从分散的文件中复合数据
+> - 2.在每一个图像上加上扰动
+> - 3.将随机挑出的图像送到batch中用作训练
+
+### `tf.data` 在1.5中有如下抽象:
+> - 1. `tf.data.Dataset` 代表a sequence of elements，每一个element有一个或者多个`Tensor`对象。例如在图像管线中，一个element可能是一个训练example，有一系列Tensors来表示图像数据以及标签。有如下两种创建dataset的方法：
+
+| 创建Dataset的方法 |
+| ------- |
+| 用一个或者多个 `tf.data.Dataset` 对象来创建一个 `Source`（例如 `Dataset.From_tensor_slices()`）|
+| 用一个`transformation`（例如 `Dataset.batch`）将一个或者多个`tf.data.Dateset`对象构造为dataset |
+
+> - 2. `tf.data.Iterator` 提供了一个主要的提取dataset中element的方法。 `Iterator.get_next()`操作会返回Dataset中的下一个element，通常作为input pipeline和模型的接口。最简单的就是"one-shot iterator"，对应某一个Dataset并且在其中iterate一次。对于更加复杂的用法，`Iterator.initializer`操作让你能够重初始化或者重定义参数用作不同的datasets。所以就可以在同一个程序中，iterate多次training and validation data。
+
+## Session
+> `tf.Session`对象用来做并行化，能够多线程运行。
+
+## Queues
+> multiple threads 会准备训练样本并且push到queue中
+> 一个训练thread会会执行一个训练op将mini-batches从queue中提出来
+> 所有的threads需要能够同时停止
+> 所有的执行必须被捕获并且被报告（reported）
+> queues必须在停止的时候被恰当得关闭
+
+##Basic mechanics
+> 在开始一个input pipeline之前你必须定义一个source. 例如要从内存中的tensors构建一个Dataset，需要`tf.data.Dataset.from_tensors()`或者`tf.data.Dataset.from_tensor_slices()`.再或者，如果你的数据是TFRecord格式，可以构建一个 `tf.data.TFRecordDataset`
+一旦你创建了一个Dataset对象，你就可以再`tf.data.Dataset`对象上调用一系列的method将其转换成新对象，例如用`Dataset.map()`应用pre-element transformations(这里的Dataset指的是Dataset对象)，也可以应用multi-element transformations例如`Dataset.batch()`。
+
+> 利用Dataset数据的通常方法是构建一个**Iterator**对象能够每一次都从dataset中获得一个element（例如调用Dataset.make_one_shot_iterator()）。一个`tf.data.Iterator`通常提供了两个操作，`Iterator.initializer`和`Iterator.get_next()`,后者返回对应写一个element的symbolic(记号，地址？)的`tf.Tensor`对象
