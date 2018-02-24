@@ -80,12 +80,12 @@ tf.app.flags.DEFINE_string('train_directory', '../NewData_rotated_jpeg/',
                            'Training data directory')
 tf.app.flags.DEFINE_string('validation_directory', '../NewData_rotated_jpeg/',
                            'Validation data directory')
-tf.app.flags.DEFINE_string('output_directory', './TFRecord/',
+tf.app.flags.DEFINE_string('output_directory', './TFRecord_one_v2/',
                            'Output data directory')
 
-tf.app.flags.DEFINE_integer('train_shards', 10,
+tf.app.flags.DEFINE_integer('train_shards', 2,
                             'Number of shards in training TFRecord files.')
-tf.app.flags.DEFINE_integer('validation_shards', 10,
+tf.app.flags.DEFINE_integer('validation_shards', 2,
                             'Number of shards in validation TFRecord files.')
 
 tf.app.flags.DEFINE_integer('num_threads', 1,
@@ -251,6 +251,7 @@ def _process_image_files_batch(coder, thread_index, ranges, name, filenames,
     # Generate a sharded version of the file name, e.g. 'train-00002-of-00010'
     shard = thread_index * num_shards_per_batch + s
     output_filename = '%s-%.5d-of-%.5d' % (name, shard, num_shards)
+    output_filename += '.tfrecords' ## should I add this??????
     output_file = os.path.join(FLAGS.output_directory, output_filename)
     writer = tf.python_io.TFRecordWriter(output_file)
 
@@ -427,5 +428,6 @@ def main(unused_argv):
                    FLAGS.train_shards, FLAGS.labels_file)
 
 
+# this one works
 if __name__ == '__main__':
   tf.app.run()
