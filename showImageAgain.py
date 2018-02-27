@@ -25,7 +25,7 @@ features = tf.parse_single_example(serialized_example,
                                         'image/encoded': tf.FixedLenFeature([], tf.string),
                                    })  #取出包含image和label的feature对象
 image = tf.decode_raw(features['image/encoded'], tf.uint8)
-image = tf.reshape(image, [128, 128, 3])
+image = tf.reshape(image, [330, 165]) # this is not right 54450
 label = tf.cast(features['image/class/label'], tf.int32)
 with tf.Session() as sess: #开始一个会话
     init_op = tf.initialize_all_variables()
