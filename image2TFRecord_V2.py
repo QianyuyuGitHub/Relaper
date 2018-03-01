@@ -21,7 +21,7 @@ from __future__ import print_function
 import argparse
 import os
 import sys
-
+import imagesRead # coded by self
 import tensorflow as tf
 
 from tensorflow.contrib.learn.python.learn.datasets import mnist
@@ -69,7 +69,7 @@ def convert_to(data_set, name):
 
 def main(unused_argv):
   # Get the data.
-  data_sets = mnist.read_data_sets(FLAGS.directory,
+  data_sets = imagesRead.read_data_sets(FLAGS.directory,
                                    dtype=tf.uint8,
                                    reshape=False,
                                    validation_size=FLAGS.validation_size)
@@ -91,7 +91,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--validation_size',
       type=int,
-      default=5000,
+      default=2000,
       help="""\
       Number of examples to separate from the training data for the validation
       set.\
