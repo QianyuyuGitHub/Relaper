@@ -42,6 +42,8 @@ And the structure of this file is like:
 	%%%%%%
 
 	And the absolute coordinates of the noodle bowls are:
+	      _________
+		 @_Graph 1_@
 
 	=======Bowl1=========
 	(280,90)	(610,90)
@@ -73,7 +75,8 @@ Since the construction of original data is a mess. So better not to consider abo
 @@@
 There are three types of .png files
 they are shooted in different angle and position
-So I devided them manully:
+So I devided them manully:               _________
+								        @_Graph 2_@
 
 	========Data_.pngType========                  ==== Type Details ====
 			2017.9.21 1				|Type1 (280,90)(610,420) | (680,90)(1010,420)
@@ -85,14 +88,14 @@ So I devided them manully:
 			2017.9.29 1
 			2017.9.30 1
 			2017.10.9 1
-			2017.10.10 1
+			2017.10.10 1/2 !!!!!!
 			2017.10.11 2
 			2017.10.12 2
 			2017.10.13 2
 			2017.10.16 2
 			2017.10.17 2
 			2017.10.18 2
-			2017.10.19 2
+			2017.10.19 2 #Error Samples
 			2017.10.20 2
 			2017.10.23 2
 			2017.10.24 4
@@ -101,14 +104,14 @@ So I devided them manully:
 			2017.10.27 4
 			2017.10.30 4
 			2017.10.31 4
-			2017.11.01 4
-			2017.11.02 4
+			2017.11.01 4 #Error Samples
+			2017.11.02 4/3 !!!!!!
 			2017.11.03 3
 			2017.11.06 3
 			2017.11.07 3
 			2017.11.09 3
 			2017.11.14 3
-			2017.11.16 3
+			2017.11.16 3 #Error Samples
 			2017.11.17 1
 			2017.11.20 1
 			2017.11.24 1
@@ -121,7 +124,8 @@ So I devided them manully:
 ----------------------------------------------------
 ###1/11/2018
 #found that some .xml files are empty
-
+											      _________
+												 @_Graph 3_@
 
 									The Four Parts of A Sub Noodel Image
 		*( x_lu , y_lu )----------------*( (x_lu + x_rd)/2 , y_lu ) ------------------*( x_rd , y_lu )
@@ -141,3 +145,119 @@ So I devided them manully:
  				|									  |										  |
  				|									  |										  |
 		*( x_lu , y_rd )----------------*( (x_lu + x_rd)/2 , y_rd ) ------------------*( x_rd , y_rd )
+
+
+----------------------------------------------------
+###1/12/2018
+#redesign the get_sub_png_lable() function, it become get_sub_png_lable_modified()
+											      _________
+												 @_Graph 4_@
+
+		 __________________PNG___________________
+		|    _____        _____        _____     |
+		|	|	  |      |     |      |     |    |                                         _________
+		|	|     |      |     |      |     |    |  (each PNG has a Type information, see @_Graph 2_@ )
+		|	|_____|      |_____|      |_____|    |							|
+		|______|_________________________________|							|
+			   |			|			 |								   / \
+			   |			|			 |			3. Type of the corresponding xml file of PNG(1/2/3/4)
+			   |			|			 |								   3|
+			  / \			|			 |								   3|
+	1.sub_noodle_locatio----|------------|----|		===Only contains one sub_noodle image's location
+	 		  \ /			|			 |	  |1						   3|
+			   |			|			 |	  |1						   3|
+			   |			|			 |	  |1						   3|
+			   |			|			 |	  |1						   3|
+			   |			|			 |	  |1						   3|
+			   |			|			 |	  |1						   3|
+			   |			|			 |	  |1						   3|
+			  / \		   / \          / \   |1                           3|
+    2.       coordinates_of_all_noodels_folks |1    ===contains all three noodles' folks' coordinates
+    									   2| |1						   3|
+    									   2| |1						   3|
+    									   2| |1						   3|
+    									   2| |1						   3|
+    									   2| |1						   3|
+    									   2| |1						   3|
+    									   2| |1						   3|
+    									   2| |1						   3|____________________________________
+    									    =================================----------------					3|
+    									    							   1|			   2|					3|
+    									    							   1|			   2|					3|
+    									    							   1|			   2|					3|
+    			Invoke Function ======>>get_sub_png_lable_modified(sub_noodle_location, xml_type, coordinates_of_all_noodels_folks)
+    											   ||
+    											   ||
+    											   ||
+    											   ||
+    											   ||
+											  _____||___________PNG___________________
+											 |    _____        _____        _____     |
+											 |	 | | | |      |     |      |     |    |
+											 |	 | |5| |      |     |      |     |    |
+											 |	 |_|_|_|      |_____|      |_____|    |
+											 |________________________________________|
+
+					Finally, the get_sub_png_lable_modified() function will return the lable of max_&_min rigions only of sub_noodle_image
+					So for each of the PNG image, it need to invoke get_sub_png_lable_modified() function two/three times to get the lables 
+					for all the sub_sub_sliced_images
+
+	*Program*
+		get_sub_png_lable_modified(sub_noodle_location, xml_type, coordinates_of_all_noodels_folks)
+
+
+----------------------------------------------------
+###1/12/2018
+#correct the problem: the parse_xml_into_dict() can not kick out the "²»Ò»ÖÂÍ¼Æ¬" folder .xml, mess the coordinates.
+	Now the parse_xml_into_dict() become parse_xml_into_dict_version2()
+	
+#get_sub_png_lable_modified() modified, as it use (if, elif ...) to judege the coordinates, the correct is to use (if, if ...) to make sure every rigion will be calculated
+																				   _________
+#And correct the lable function, it is not four quadrants but six sub rigions, as @_Graph 5_@ shows:
+
+
+																					      _________
+																						 @_Graph 5_@
+
+																			The Six Parts of A Sub Noodel Image
+		*( x_lu , y_lu )-------------*( (3*x_lu + x_rd)/4 , y_lu )-------------*( (x_lu + x_rd)/2 , y_lu ) ----------------*( (x_lu + 3*x_rd)/4 , y_lu)----------------*( x_rd , y_lu )
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+*( x_lu , (3*y_lu + y_rd)/4 )--*( (3*x_lu + x_rd)/4 , (3*y_lu + y_rd)/4 )--*( (x_lu + x_rd)/2 , (3*y_lu + y_rd)/4 )--*( (x_lu + 3*x_rd)/4 , (3*y_lu + y_rd)/4 )--*( x_rd , (3*y_lu + y_rd)/4 )
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ *( x_lu , (y_lu + y_rd)/2 )----*( (3*x_lu + x_rd)/4 , (y_lu + y_rd)/2 )----*( (x_lu + x_rd)/2 , (y_lu + y_rd)/2 )----*( (x_lu + 3*x_rd)/4 , (y_lu + y_rd)/2 )----*( x_rd , (y_lu + y_rd)/2 )
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+*( x_lu , (y_lu + 3*y_rd)/4 )--*( (3*x_lu + x_rd)/4 , (y_lu + 3*y_rd)/4 )--*( (x_lu + x_rd)/2 , (y_lu + 3*y_rd)/4 )--*( (x_lu + 3*x_rd)/4 , (y_lu + 3*y_rd)/4 )--*( x_rd , (y_lu + 3*y_rd)/4 )
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+ 				|									 |										   |										   |									|
+		*( x_lu , y_rd )-------------*( (3*x_lu + x_rd)/4 , y_rd )--------------*( (x_lu + x_rd)/2 , y_rd )-----------------*( (x_lu + 3*x_rd)/4 , y_rd )---------------*( x_rd , y_rd )
+
+
+#the .png are not the same type even in same folder in some circumensetance
+#the reason why some .xml files are empty is that some .png files are not correct, and even some none empty .xml files relates to incorrect
