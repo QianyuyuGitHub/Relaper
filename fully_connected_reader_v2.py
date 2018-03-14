@@ -34,6 +34,7 @@ import time
 import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import mnist
+import NetStructureV2
 
 # Basic model parameters as external flags.
 FLAGS = None
@@ -56,7 +57,7 @@ def decode(serialized_example):
   # length mnist.IMAGE_PIXELS) to a uint8 tensor with shape
   # [mnist.IMAGE_PIXELS].
   image = tf.decode_raw(features['image_raw'], tf.uint8)
-  image.set_shape((mnist.IMAGE_PIXELS))
+  image.set_shape((NetStructureV2.IMAGE_PIXELS))
 
   # Convert label from a scalar uint8 tensor to an int32 scalar.
   label = tf.cast(features['label'], tf.int32)
@@ -126,15 +127,15 @@ def run_training():
                                num_epochs=FLAGS.num_epochs)
 
     # Build a Graph that computes predictions from the inference model.
-    logits = mnist.inference(image_batch,
+    logits = NetStructureV2.inference(image_batch,
                              FLAGS.hidden1,
                              FLAGS.hidden2)
 
     # Add to the Graph the loss calculation.
-    loss = mnist.loss(logits, label_batch)
+    loss = NetStructureV2.loss(logits, label_batch)
 
     # Add to the Graph operations that train the model.
-    train_op = mnist.training(loss, FLAGS.learning_rate)
+    train_op = NetStructureV2.training(loss, FLAGS.learning_rate)
 
     # The op for initializing the variables.
     init_op = tf.group(tf.global_variables_initializer(),
@@ -189,13 +190,13 @@ if __name__ == '__main__':
   parser.add_argument(
       '--hidden1',
       type=int,
-      default=128,
+      default=1024,
       help='Number of units in hidden layer 1.'
   )
   parser.add_argument(
       '--hidden2',
       type=int,
-      default=32,
+      default=128,
       help='Number of units in hidden layer 2.'
   )
   parser.add_argument(

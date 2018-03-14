@@ -36,7 +36,7 @@ NUM_CLASSES = 2
 
 # The MNIST images are always 28x28 pixels.
 # IMAGE_SIZE = 28
-IMAGE_PIXELS = 330 * 165
+IMAGE_PIXELS = 330 * 165 * 3
 
 
 def inference(images, hidden1_units, hidden2_units):
