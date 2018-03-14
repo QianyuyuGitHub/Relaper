@@ -43,8 +43,10 @@ def compress_data_label(image_Path):
     :return:
     '''
     a = 0
-    iamgeConpressed = []
+    iamgeCompressed = []
+    imageCompressedArray = []
     labelCompressed = []
+    count = 0
     for root, dirs, files in os.walk(image_Path):
         for filesingle in files:
             # print(root)
@@ -53,20 +55,35 @@ def compress_data_label(image_Path):
             img = Image.open(str(root) + '/' + str(filesingle))
             imageArray = numpy.asarray(img) # ([] [165] [330] [3])
             # print(imageArray)
-            iamgeConpressed.append(imageArray)
-            labelCompressed.append(rootRe.group(2))
+            iamgeCompressed.append(imageArray)
+            labelCompressed.append(int(rootRe.group(2)))
             labelCompressedArray = numpy.asarray(labelCompressed)
             if a == 0:
                 print('The fisrt layer size;', len(imageArray))
                 print('The second layer size:', len(imageArray[0]))
                 print('The last layer size:', len(imageArray[0][0]))
                 a = 1
-    print('The final index of iamgeConpressed is:', len(iamgeConpressed))
-    print('The final index of labelConpressed is:', len(labelCompressedArray))
-    print('The type of the labelCompressed is:', type(labelCompressedArray))
-    return iamgeConpressed, labelCompressedArray
-
-
+            # print("Image No.", count)
+            count += 1
+            ########## TEST :
+            # if count == 50:
+            #     imageCompressedArray = numpy.asarray(iamgeCompressed)
+            #     print('The final index of iamgeConpressed is:', len(imageCompressedArray))
+            #     print('The final index of labelConpressed is:', len(labelCompressedArray))
+            #     print('The type of the labelCompressed is:', type(labelCompressed))
+            #     print('The type of the labelCompressedArray is:', type(labelCompressedArray))
+            #     print("The shape of imageCompressedArray is:", imageCompressedArray.shape)
+            #     print("The shape of labelCompressedArray is:", labelCompressedArray.shape)
+            #     return labelCompressedArray, labelCompressedArray
+            ########## TEST :
+    imageCompressedArray = numpy.asarray(iamgeCompressed)
+    print('The final index of iamgeConpressed is:', len(imageCompressedArray))
+    print('The final index of labelConpressed is:', len(imageCompressedArray))
+    print('The type of the labelCompressed is:', type(labelCompressed))
+    print('The type of the labelCompressedArray is:', type(labelCompressedArray))
+    print("The shape of imageCompressedArray is:", imageCompressedArray.shape)
+    print("The shape of labelCompressedArray is:", labelCompressedArray.shape)
+    return imageCompressedArray, labelCompressedArray
 
 class DataSet(object):
 
@@ -113,6 +130,66 @@ class DataSet(object):
     self._epochs_completed = 0
     self._index_in_epoch = 0
 
+  @property
+  def images(self):
+    return self._images
+
+  @property
+  def labels(self):
+    return self._labels
+
+  @property
+  def num_examples(self):
+    return self._num_examples
+
+  @property
+  def epochs_completed(self):
+    return self._epochs_completed
+
+  def next_batch(self, batch_size, fake_data=False, shuffle=True):
+    """Return the next `batch_size` examples from this data set."""
+    if fake_data:
+      fake_image = [1] * 784
+      if self.one_hot:
+        fake_label = [1] + [0] * 9
+      else:
+        fake_label = 0
+      return [fake_image for _ in xrange(batch_size)], [
+          fake_label for _ in xrange(batch_size)
+      ]
+    start = self._index_in_epoch
+    # Shuffle for the first epoch
+    if self._epochs_completed == 0 and start == 0 and shuffle:
+      perm0 = numpy.arange(self._num_examples)
+      numpy.random.shuffle(perm0)
+      self._images = self.images[perm0]
+      self._labels = self.labels[perm0]
+    # Go to the next epoch
+    if start + batch_size > self._num_examples:
+      # Finished epoch
+      self._epochs_completed += 1
+      # Get the rest examples in this epoch
+      rest_num_examples = self._num_examples - start
+      images_rest_part = self._images[start:self._num_examples]
+      labels_rest_part = self._labels[start:self._num_examples]
+      # Shuffle the data
+      if shuffle:
+        perm = numpy.arange(self._num_examples)
+        numpy.random.shuffle(perm)
+        self._images = self.images[perm]
+        self._labels = self.labels[perm]
+      # Start next epoch
+      start = 0
+      self._index_in_epoch = batch_size - rest_num_examples
+      end = self._index_in_epoch
+      images_new_part = self._images[start:end]
+      labels_new_part = self._labels[start:end]
+      return numpy.concatenate((images_rest_part, images_new_part), axis=0) , numpy.concatenate((labels_rest_part, labels_new_part), axis=0)
+    else:
+      self._index_in_epoch += batch_size
+      end = self._index_in_epoch
+      return self._images[start:end], self._labels[start:end]
+
 def read_data_sets(train_dir,
                    fake_data=False,
                    one_hot=False,
@@ -123,13 +200,18 @@ def read_data_sets(train_dir,
                    source_url=image_Path):
 
     images, labels = compress_data_label(image_Path)
+    print("The return type of labels is:", type(labels))
+    print("The return type of images is:", type(images))
 
+    print("The shape of the images:", images.shape)
     validation_images = images[:validation_size]
-    validation_labels = labels[:validation_size]
+    validation_labels = numpy.array(labels[:validation_size])
     train_images = images[validation_size:]
-    train_labels = labels[validation_size:]
+    train_labels = numpy.array(labels[validation_size:])
     test_images = train_images
     test_labels = train_labels
+
+    print(train_images.shape)
 
     options = dict(dtype=dtype, reshape=reshape, seed=seed)
 
@@ -142,6 +224,4 @@ def read_data_sets(train_dir,
 
 if __name__ == '__main__':
     compress_data_label(image_Path)
-
-
 

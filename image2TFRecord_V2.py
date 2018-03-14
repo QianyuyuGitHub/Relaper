@@ -24,7 +24,7 @@ import sys
 import imagesRead # coded by self
 import tensorflow as tf
 
-from tensorflow.contrib.learn.python.learn.datasets import mnist
+# from tensorflow.contrib.learn.python.learn.datasets import mnist
 
 FLAGS = None
 
@@ -65,7 +65,7 @@ def convert_to(data_set, name):
                   'image_raw': _bytes_feature(image_raw)
               }))
       writer.write(example.SerializeToString())
-
+      print('Finished writing', filename)
 
 def main(unused_argv):
   # Get the data.
@@ -73,7 +73,8 @@ def main(unused_argv):
                                    dtype=tf.uint8,
                                    reshape=False,
                                    validation_size=FLAGS.validation_size)
-
+  print(type(data_sets.train))
+  print(data_sets.train.images.shape)
   # Convert to Examples and write the result to TFRecords.
   convert_to(data_sets.train, 'train')
   convert_to(data_sets.validation, 'validation')
@@ -85,7 +86,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--directory',
       type=str,
-      default='/tmp/data',
+      default='./tmp/data/',
       help='Directory to download data files and write the converted result'
   )
   parser.add_argument(

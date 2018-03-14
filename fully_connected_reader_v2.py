@@ -36,18 +36,11 @@ import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import mnist
 
 # Basic model parameters as external flags.
-# FLAGS = None
-flags = tf.app.flags
-FLAGS = flags.FLAGS
-flags.DEFINE_integer("image_number", 4411, "Number of images in your tfrecord, default is 300.")
-flags.DEFINE_integer("class_number", 2, "Number of class in your dataset/label.txt, default is 3.")
-flags.DEFINE_integer("image_height", 165, "Height of the output image after crop and resize. Default is 299.")
-flags.DEFINE_integer("image_width", 330, "Width of the output image after crop and resize. Default is 299.")
-# flags.DEFINE_integer("batch_size", 100, "Width of the output image after crop and resize. Default is 299.")
+FLAGS = None
 
 # Constants used for dealing with the files, matches convert_to_records.
-TRAIN_FILE = 'train-00000-of-00002.tfrecords'
-VALIDATION_FILE = 'validation-00000-of-00002.tfrecords'
+TRAIN_FILE = 'train.tfrecords'
+VALIDATION_FILE = 'validation.tfrecords'
 
 
 def decode(serialized_example):
@@ -55,36 +48,20 @@ def decode(serialized_example):
       serialized_example,
       # Defaults are not specified since both keys are required.
       features={
-        'image/height': tf.FixedLenFeature([], tf.int64),
-        'image/width': tf.FixedLenFeature([], tf.int64),
-        'image/colorspace': tf.FixedLenFeature([], tf.string),
-        'image/channels': tf.FixedLenFeature([], tf.int64),
-        'image/class/label': tf.FixedLenFeature([], tf.int64),
-        'image/class/text': tf.FixedLenFeature([], tf.string),
-        'image/format': tf.FixedLenFeature([], tf.string),
-        'image/filename': tf.FixedLenFeature([], tf.string),
-        'image/encoded': tf.FixedLenFeature([], tf.string),
-      }
-  )
+          'image_raw': tf.FixedLenFeature([], tf.string),
+          'label': tf.FixedLenFeature([], tf.int64),
+      })
 
   # Convert from a scalar string tensor (whose single string has
   # length mnist.IMAGE_PIXELS) to a uint8 tensor with shape
   # [mnist.IMAGE_PIXELS].
+  image = tf.decode_raw(features['image_raw'], tf.uint8)
+  image.set_shape((mnist.IMAGE_PIXELS))
 
-  # image = tf.decode_raw(features['image_raw'], tf.uint8)
-  # image.set_shape((mnist.IMAGE_PIXELS)) #IMAGE_PIXELS should be replaced
-  #
-  # # Convert label from a scalar uint8 tensor to an int32 scalar.
-  # label = tf.cast(features['label'], tf.int32)
+  # Convert label from a scalar uint8 tensor to an int32 scalar.
+  label = tf.cast(features['label'], tf.int32)
 
-  im = tf.decode_raw(features["image/encoded"], tf.uint8)
-  IMAGE_PIXELS = [330 * 165]
-  # im = tf.reshape(im, IMAGE_PIXELS)
-  im.set_shape((IMAGE_PIXELS))
-  # im = tf.cast(im, tf.float32) * (1. / 128) - 0.5
-  label = tf.cast(features['image/class/label'], tf.int32)
-
-  return im, label
+  return image, label
 
 def augment(image, label):
   # OPTIONAL: Could reshape into a 28x28 image and apply distortions
@@ -138,7 +115,6 @@ def inputs(train, batch_size, num_epochs):
     iterator = dataset.make_one_shot_iterator()
   return iterator.get_next()
 
-import NetStructureV2
 
 def run_training():
   """Train MNIST for a number of steps."""
@@ -150,15 +126,15 @@ def run_training():
                                num_epochs=FLAGS.num_epochs)
 
     # Build a Graph that computes predictions from the inference model.
-    logits = NetStructureV2.inference(image_batch,
+    logits = mnist.inference(image_batch,
                              FLAGS.hidden1,
                              FLAGS.hidden2)
 
     # Add to the Graph the loss calculation.
-    loss = NetStructureV2.loss(logits, label_batch)
+    loss = mnist.loss(logits, label_batch)
 
     # Add to the Graph operations that train the model.
-    train_op = NetStructureV2.training(loss, FLAGS.learning_rate)
+    train_op = mnist.training(loss, FLAGS.learning_rate)
 
     # The op for initializing the variables.
     init_op = tf.group(tf.global_variables_initializer(),
@@ -231,7 +207,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--train_dir',
       type=str,
-      default='./TFRecord_one',
+      default='./tmp/data/',
       help='Directory with the training data.'
   )
   FLAGS, unparsed = parser.parse_known_args()
