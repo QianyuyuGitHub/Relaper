@@ -55,6 +55,12 @@ def convert_to(data_set, name):
   with tf.python_io.TFRecordWriter(filename) as writer:
     for index in range(num_examples):
       image_raw = images[index].tostring()
+      if labels[index] == 0:
+          label_vector = [0, 1]
+      elif labels[index] == 1:
+          label_vector = [1, 0]
+      else:
+          print("There is something wrong with the label, not either 1 or 0 !!!!!!!!!!!!!")
       example = tf.train.Example(
           features=tf.train.Features(
               feature={

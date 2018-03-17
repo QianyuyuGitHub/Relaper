@@ -2,6 +2,7 @@
 
 	- implement a database
 	- ACM problems
+	- create an APP, a shop list APP, and will list out the things you want to buy in ranking! To make sure what you are going to buy is worth and optimal choice currently.
 	- implement a samll website 
 		> python flask
 
@@ -18,3 +19,4 @@
 	- And the game has multiplayer mode to support two player in the same hero, one to controll the motivation and attacks, while the other use cards to make other affects.
 	- And it can connect to the mobile phones, so the cards can be controlled on the mobiles to be more convinients.
 	- It can provide with pure card game mode.
+

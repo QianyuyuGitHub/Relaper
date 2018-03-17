@@ -22,7 +22,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 import argparse
 
-mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
+mnist = input_data.read_data_sets("/tmp/data2/", one_hot=True)
 
 
 # Basic model parameters as external flags.
@@ -36,11 +36,20 @@ batch_size = 1024
 display_step = 10
 
 eval_batch_size = 500
-eval_num_epochs = FLAGS.num_epochs
+eval_total_size = 2000
+eval_num_epochs = 1
 
+
+##########
+# learning_rate=0.01
+num_epochs = 10000
+batch_size = 100
+train_dir = './tmp/data2/'
+
+##########
 # Network Parameters
 num_input = 784 # MNIST data input (img shape: 28*28)
-num_classes = 10 # MNIST total classes (0-9 digits)
+num_classes = 2 # MNIST total classes (0-9 digits)
 dropout = 0.75 # Dropout, probability to keep units
 
 import NetStructureV2
@@ -53,19 +62,19 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
         # MNIST data input is a 1-D vector of 784 features (28*28 pixels)
         # Reshape to match picture format [Height x Width x Channel]
         # Tensor input become 4-D: [Batch Size, Height, Width, Channel]
-        x = tf.reshape(x, shape=[-1, 28, 28, 1])
+        x = tf.reshape(x, shape=[-1, 330, 165, 3])
 
         # Convolution Layer with 64 filters and a kernel size of 5
         x = tf.layers.conv2d(x, 64, 5, activation=tf.nn.relu)
         # Max Pooling (down-sampling) with strides of 2 and kernel size of 2
-        x = tf.layers.max_pooling2d(x, 2, 2)
+        x = tf.layers.max_pooling2d(x, 11, 11)
 
         # Convolution Layer with 256 filters and a kernel size of 5
-        x = tf.layers.conv2d(x, 256, 3, activation=tf.nn.relu)
+        x = tf.layers.conv2d(x, 256, 5, activation=tf.nn.relu)
         # Convolution Layer with 512 filters and a kernel size of 5
-        x = tf.layers.conv2d(x, 512, 3, activation=tf.nn.relu)
+        x = tf.layers.conv2d(x, 512, 2, activation=tf.nn.relu)
         # Max Pooling (down-sampling) with strides of 2 and kernel size of 2
-        x = tf.layers.max_pooling2d(x, 2, 2)
+        x = tf.layers.max_pooling2d(x, 5, 5)
 
         # Flatten the data to a 1-D vector for the fully connected layer
         x = tf.contrib.layers.flatten(x)
@@ -141,7 +150,7 @@ def decode(serialized_example):
       # Defaults are not specified since both keys are required.
       features={
           'image_raw': tf.FixedLenFeature([], tf.string),
-          'label': tf.FixedLenFeature([], tf.int64),
+          'label': tf.FixedLenFeature([], tf.string),
       })
 
   # Convert from a scalar string tensor (whose single string has
@@ -186,7 +195,7 @@ def inputs(train, batch_size, num_epochs):
     required.
   """
   if not num_epochs: num_epochs = None
-  filename = os.path.join(FLAGS.train_dir,
+  filename = os.path.join(train_dir,
                           TRAIN_FILE if train else VALIDATION_FILE)
 
   with tf.name_scope('input'):
@@ -212,39 +221,53 @@ with tf.device('/cpu:0'):
     tower_grads = []
     reuse_vars = False
 
-    # tf Graph input
-    X = tf.placeholder(tf.float32, [None, num_input])
-    Y = tf.placeholder(tf.float32, [None, num_classes])
+    # # tf Graph input
+    # X = tf.placeholder(tf.float32, [None, num_input])
+    # Y = tf.placeholder(tf.float32, [None, num_classes])
+    image_batch, label_batch = inputs(train=True, batch_size=batch_size,
+                       num_epochs=num_epochs)
 
+    #for evalution
+    batch_x_eval, batch_y_eval = inputs(train=False, batch_size=eval_total_size,
+                                        num_epochs=eval_num_epochs)
     # Loop over all GPUs and construct their own computation graph
     for i in range(num_gpus):
         with tf.device(assign_to_device('/gpu:{}'.format(i), ps_device='/cpu:0')):
 
-            # Split data between GPUs
-            _x = X[i * batch_size: (i+1) * batch_size]
-            _y = Y[i * batch_size: (i+1) * batch_size]
+            # # Split data between GPUs
+            # _x = X[i * batch_size: (i+1) * batch_size]
+            # _y = Y[i * batch_size: (i+1) * batch_size]
+            # _x = image_batch[]
+            # _y = label_batch[]
 
             # Because Dropout have different behavior at training and prediction time, we
             # need to create 2 distinct computation graphs that share the same weights.
 
             # Create a graph for training
-            logits_train = conv_net(_x, num_classes, dropout,
+            logits_train = conv_net(image_batch, num_classes, dropout,
                                     reuse=reuse_vars, is_training=True)
             # Create another graph for testing that reuse the same weights
-            logits_test = conv_net(_x, num_classes, dropout,
+            logits_test = conv_net(image_batch, num_classes, dropout,
                                    reuse=True, is_training=False)
+
+            # batch_x, batch_y = inputs(train=True, batch_size=batch_size,
+            #                           num_epochs=num_epochs)
 
             # Define loss and optimizer (with train logits, for dropout to take effect)
             loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-                logits=logits_train, labels=_y))
+                logits=logits_train, labels=label_batch))
             optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
             grads = optimizer.compute_gradients(loss_op)
 
             # Only first GPU compute accuracy
             if i == 0:
+                #evaluation
+                logits_eval = conv_net(batch_x_eval, num_classes, dropout,
+                                       reuse=True, is_training=False)
                 # Evaluate model (with test logits, for dropout to be disabled)
-                correct_pred = tf.equal(tf.argmax(logits_test, 1), tf.argmax(_y, 1))
-                accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+                correct_pred_eval = tf.equal(tf.argmax(logits_eval, 1), tf.argmax(batch_y_eval, 1))
+                accuracy_eval = tf.reduce_mean(tf.cast(correct_pred_eval, tf.float32))
+                ## tensorflow.python.framework.errors_impl.UnimplementedError: Cast string to int32 is not supported ?????
 
             reuse_vars = True
             tower_grads.append(grads)
@@ -256,7 +279,10 @@ with tf.device('/cpu:0'):
     init = tf.global_variables_initializer()
 
     # Start Training
-    with tf.Session() as sess:
+    config = tf.ConfigProto(allow_soft_placement=True) # https://github.com/tensorflow/tensorflow/issues/2292
+    config.gpu_options.allow_growth = True
+    # config.gpu_options.per_process_gpu_memory_fraction = 0.5
+    with tf.Session(config=config) as sess:
 
         # Run the initializer
         sess.run(init)
@@ -265,28 +291,23 @@ with tf.device('/cpu:0'):
         for step in range(1, num_steps + 1):
             # Get a batch for each GPU
             # batch_x, batch_y = mnist.train.next_batch(batch_size * num_gpus)
-            batch_x, batch_y = inputs(train=True, batch_size=FLAGS.batch_size,
-                               num_epochs=FLAGS.num_epochs)
             # Run optimization op (backprop)
             ts = time.time()
-            sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
+            sess.run(train_op) #### no placeholders   no feed_dict={X: batch_x, Y: batch_y}
             te = time.time() - ts
             if step % display_step == 0 or step == 1:
                 # Calculate batch loss and accuracy
-                loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x,
-                                                                     Y: batch_y})
+                loss, acc = sess.run([loss_op, accuracy_eval])
                 print("Step " + str(step) + ": Minibatch Loss= " + \
                       "{:.4f}".format(loss) + ", Training Accuracy= " + \
-                      "{:.3f}".format(acc) + ", %i Examples/sec" % int(len(batch_x)/te))
+                      "{:.3f}".format(acc) + ", %i Examples/sec" % int(tf.shape(image_batch)[0] /te))
             step += 1
         print("Optimization Finished!")
 
-        batch_x_eval, batch_y_eval = inputs(train=False, batch_size=eval_batch_size,
-                               num_epochs=eval_num_epochs)
-        # Calculate accuracy for MNIST test images
-        print("Testing Accuracy:", \
-            np.mean([sess.run(accuracy, feed_dict={X: mnist.test.images[i:i+batch_size],
-            Y: mnist.test.labels[i:i+batch_size]}) for i in range(0, len(mnist.test.images), batch_size)]))
+        # try to edit it so that it fits the other parts
+        # # Calculate accuracy for MNIST test images
+        # print("Testing Accuracy:", \
+        #     np.mean([sess.run(accuracy) for i in range(0, eval_total_size, eval_batch_size)]))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -323,7 +344,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--train_dir',
       type=str,
-      default='./tmp/data/',
+      default='./tmp/data2/',
       help='Directory with the training data.'
   )
   FLAGS, unparsed = parser.parse_known_args()
