@@ -24,31 +24,28 @@ import argparse
 
 mnist = input_data.read_data_sets("/tmp/data2/", one_hot=True)
 
-
 # Basic model parameters as external flags.
 FLAGS = None
 
 # Training Parameters
 num_gpus = 2
-num_steps = 200
-learning_rate = 0.001
-batch_size = 1024
-display_step = 10
+num_steps = 20000
+learning_rate = 0.05
+# batch_size = 1024
+display_step = 1000
 
-eval_batch_size = 500
-eval_total_size = 2000
-eval_num_epochs = 1
-
+eval_batch_size = 100
+eval_total_size = 100 #2000
+eval_num_epochs = 10
 
 ##########
 # learning_rate=0.01
-num_epochs = 10000
+num_epochs = 1000
 batch_size = 100
-train_dir = './tmp/data2/'
+train_dir = './tmp/data4/'
 
 ##########
 # Network Parameters
-num_input = 784 # MNIST data input (img shape: 28*28)
 num_classes = 2 # MNIST total classes (0-9 digits)
 dropout = 0.75 # Dropout, probability to keep units
 
@@ -97,7 +94,6 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
 
     return out
 
-
 def average_gradients(tower_grads):
     average_grads = []
     for grad_and_vars in zip(*tower_grads):
@@ -122,8 +118,6 @@ def average_gradients(tower_grads):
         grad_and_var = (grad, v)
         average_grads.append(grad_and_var)
     return average_grads
-
-
 # By default, all variables will be placed on '/gpu:0'
 # So we need a custom device function, to assign all variables to '/cpu:0'
 # Note: If GPUs are peered, '/gpu:0' can be a faster option
@@ -150,17 +144,17 @@ def decode(serialized_example):
       # Defaults are not specified since both keys are required.
       features={
           'image_raw': tf.FixedLenFeature([], tf.string),
-          'label': tf.FixedLenFeature([], tf.string),
+          'label': tf.FixedLenFeature([], tf.string), ###label decode!!!!!
       })
 
   # Convert from a scalar string tensor (whose single string has
   # length mnist.IMAGE_PIXELS) to a uint8 tensor with shape
   # [mnist.IMAGE_PIXELS].
   image = tf.decode_raw(features['image_raw'], tf.uint8)
-  image.set_shape((IMAGE_PIXELS))
-
+  image.set_shape(IMAGE_PIXELS)
   # Convert label from a scalar uint8 tensor to an int32 scalar.
-  label = tf.cast(features['label'], tf.int32)
+  label = tf.decode_raw(features['label'], tf.int32)
+  label = tf.cast(label, tf.int32)
 
   return image, label
 
@@ -217,97 +211,99 @@ def inputs(train, batch_size, num_epochs):
   return iterator.get_next()
 
 # Place all ops on CPU by default
-with tf.device('/cpu:0'):
-    tower_grads = []
-    reuse_vars = False
+def main(_):
+    with tf.device('/cpu:0'):
+        tower_grads = []
+        reuse_vars = False
 
-    # # tf Graph input
-    # X = tf.placeholder(tf.float32, [None, num_input])
-    # Y = tf.placeholder(tf.float32, [None, num_classes])
-    image_batch, label_batch = inputs(train=True, batch_size=batch_size,
-                       num_epochs=num_epochs)
+        # # tf Graph input
+        # X = tf.placeholder(tf.float32, [None, num_input])
+        # Y = tf.placeholder(tf.float32, [None, num_classes])
+        image_batch, label_batch = inputs(train=True, batch_size=batch_size,
+                           num_epochs=num_epochs)
 
-    #for evalution
-    batch_x_eval, batch_y_eval = inputs(train=False, batch_size=eval_total_size,
-                                        num_epochs=eval_num_epochs)
-    # Loop over all GPUs and construct their own computation graph
-    for i in range(num_gpus):
-        with tf.device(assign_to_device('/gpu:{}'.format(i), ps_device='/cpu:0')):
+        #for evalution
+        batch_x_eval, batch_y_eval = inputs(train=False, batch_size=eval_total_size,
+                                            num_epochs=eval_num_epochs)
 
-            # # Split data between GPUs
-            # _x = X[i * batch_size: (i+1) * batch_size]
-            # _y = Y[i * batch_size: (i+1) * batch_size]
-            # _x = image_batch[]
-            # _y = label_batch[]
+        # Loop over all GPUs and construct their own computation graph
+        for i in range(num_gpus):
+            with tf.device(assign_to_device('/gpu:{}'.format(i), ps_device='/cpu:0')):
 
-            # Because Dropout have different behavior at training and prediction time, we
-            # need to create 2 distinct computation graphs that share the same weights.
+                # # Split data between GPUs
+                # _x = X[i * batch_size: (i+1) * batch_size]
+                # _y = Y[i * batch_size: (i+1) * batch_size]
+                # _x = image_batch[]
+                # _y = label_batch[]
 
-            # Create a graph for training
-            logits_train = conv_net(image_batch, num_classes, dropout,
-                                    reuse=reuse_vars, is_training=True)
-            # Create another graph for testing that reuse the same weights
-            logits_test = conv_net(image_batch, num_classes, dropout,
-                                   reuse=True, is_training=False)
+                # Because Dropout have different behavior at training and prediction time, we
+                # need to create 2 distinct computation graphs that share the same weights.
 
-            # batch_x, batch_y = inputs(train=True, batch_size=batch_size,
-            #                           num_epochs=num_epochs)
-
-            # Define loss and optimizer (with train logits, for dropout to take effect)
-            loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-                logits=logits_train, labels=label_batch))
-            optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-            grads = optimizer.compute_gradients(loss_op)
-
-            # Only first GPU compute accuracy
-            if i == 0:
+                # Create a graph for training
+                logits_train = conv_net(image_batch, num_classes, dropout,
+                                        reuse=reuse_vars, is_training=True)
+                # Create another graph for testing that reuse the same weights
+                logits_test = conv_net(image_batch, num_classes, dropout,
+                                       reuse=True, is_training=False)
                 #evaluation
                 logits_eval = conv_net(batch_x_eval, num_classes, dropout,
                                        reuse=True, is_training=False)
-                # Evaluate model (with test logits, for dropout to be disabled)
-                correct_pred_eval = tf.equal(tf.argmax(logits_eval, 1), tf.argmax(batch_y_eval, 1))
-                accuracy_eval = tf.reduce_mean(tf.cast(correct_pred_eval, tf.float32))
-                ## tensorflow.python.framework.errors_impl.UnimplementedError: Cast string to int32 is not supported ?????
+                # batch_x, batch_y = inputs(train=True, batch_size=batch_size,
+                #                           num_epochs=num_epochs)
 
-            reuse_vars = True
-            tower_grads.append(grads)
+                # Define loss and optimizer (with train logits, for dropout to take effect)
+                loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+                    logits=logits_train, labels=label_batch))
+                optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+                grads = optimizer.compute_gradients(loss_op)
 
-    tower_grads = average_gradients(tower_grads)
-    train_op = optimizer.apply_gradients(tower_grads)
+                # Only first GPU compute accuracy
+                if i == 0:
 
-    # Initialize the variables (i.e. assign their default value)
-    init = tf.global_variables_initializer()
+                    # Evaluate model (with test logits, for dropout to be disabled)
+                    correct_pred_eval = tf.equal(tf.argmax(logits_eval, 1), tf.argmax(batch_y_eval, 1))
+                    accuracy_eval = tf.reduce_mean(tf.cast(correct_pred_eval, tf.float32))
+                    ## tensorflow.python.framework.errors_impl.UnimplementedError: Cast string to int32 is not supported ?????
 
-    # Start Training
-    config = tf.ConfigProto(allow_soft_placement=True) # https://github.com/tensorflow/tensorflow/issues/2292
-    config.gpu_options.allow_growth = True
-    # config.gpu_options.per_process_gpu_memory_fraction = 0.5
-    with tf.Session(config=config) as sess:
+                reuse_vars = True
+                tower_grads.append(grads)
 
-        # Run the initializer
-        sess.run(init)
+        tower_grads = average_gradients(tower_grads)
+        train_op = optimizer.apply_gradients(tower_grads)
 
-        # Keep training until reach max iterations
-        for step in range(1, num_steps + 1):
-            # Get a batch for each GPU
-            # batch_x, batch_y = mnist.train.next_batch(batch_size * num_gpus)
-            # Run optimization op (backprop)
-            ts = time.time()
-            sess.run(train_op) #### no placeholders   no feed_dict={X: batch_x, Y: batch_y}
-            te = time.time() - ts
-            if step % display_step == 0 or step == 1:
-                # Calculate batch loss and accuracy
-                loss, acc = sess.run([loss_op, accuracy_eval])
-                print("Step " + str(step) + ": Minibatch Loss= " + \
-                      "{:.4f}".format(loss) + ", Training Accuracy= " + \
-                      "{:.3f}".format(acc) + ", %i Examples/sec" % int(tf.shape(image_batch)[0] /te))
-            step += 1
-        print("Optimization Finished!")
+        # Initialize the variables (i.e. assign their default value)
+        init = tf.global_variables_initializer()
 
-        # try to edit it so that it fits the other parts
-        # # Calculate accuracy for MNIST test images
-        # print("Testing Accuracy:", \
-        #     np.mean([sess.run(accuracy) for i in range(0, eval_total_size, eval_batch_size)]))
+        # Start Training
+        config = tf.ConfigProto(allow_soft_placement=True) # https://github.com/tensorflow/tensorflow/issues/2292
+        config.gpu_options.allow_growth = True
+        # config.gpu_options.per_process_gpu_memory_fraction = 0.5
+        with tf.Session(config=config) as sess:
+
+            # Run the initializer
+            sess.run(init)
+
+            # Keep training until reach max iterations
+            for step in range(1, num_steps + 1):
+                # Get a batch for each GPU
+                # batch_x, batch_y = mnist.train.next_batch(batch_size * num_gpus)
+                # Run optimization op (backprop)
+                ts = time.time()
+                sess.run(train_op) #### no placeholders   no feed_dict={X: batch_x, Y: batch_y}
+                te = time.time() - ts
+                if step % display_step == 0 or step == 1:
+                    # Calculate batch loss and accuracy
+                    loss, acc = sess.run([loss_op, accuracy_eval])
+                    print("Step " + str(step) + ": Minibatch Loss= " + \
+                          "{:.4f}".format(loss) + ", Training Accuracy= " + \
+                          "{:.3f}".format(acc) + ", %i Examples/sec" % int(batch_size /te))
+                step += 1
+            print("Optimization Finished!")
+
+            # try to edit it so that it fits the other parts
+            # # Calculate accuracy for MNIST test images
+            # print("Testing Accuracy:", \
+            #     np.mean([sess.run(accuracy) for i in range(0, eval_total_size, eval_batch_size)]))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -344,7 +340,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--train_dir',
       type=str,
-      default='./tmp/data2/',
+      default='./tmp/data4/',
       help='Directory with the training data.'
   )
   FLAGS, unparsed = parser.parse_known_args()
