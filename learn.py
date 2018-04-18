@@ -5,6 +5,8 @@ import os
 # with open('./new.txt', 'r+') as aF:
 #     aF.write('MOMOMOMOMOMO!!!')
 
+def LM():
+    pass
 
 def main():
     return 0

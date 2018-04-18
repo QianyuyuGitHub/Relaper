@@ -22,21 +22,21 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 import argparse
 
-mnist = input_data.read_data_sets("/tmp/data2/", one_hot=True)
+mnist = input_data.read_data_sets("/tmp/data4/", one_hot=True)
 
 # Basic model parameters as external flags.
 FLAGS = None
 
 # Training Parameters
 num_gpus = 2
-num_steps = 20000
+num_steps = 20000  # this is the parameter to control the step
 learning_rate = 0.05
 # batch_size = 1024
-display_step = 1000
+display_step = 100
 
 eval_batch_size = 100
-eval_total_size = 100 #2000
-eval_num_epochs = 10
+# eval_total_size = 100 #2000
+eval_num_epochs = 1000
 
 ##########
 # learning_rate=0.01
@@ -77,18 +77,18 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
         x = tf.contrib.layers.flatten(x)
 
         # Fully connected layer (in contrib folder for now)
-        x = tf.layers.dense(x, 2048)
+        x = tf.layers.dense(x, 128)
         # Apply Dropout (if is_training is False, dropout is not applied)
         x = tf.layers.dropout(x, rate=dropout, training=is_training)
 
         # Fully connected layer (in contrib folder for now)
-        x = tf.layers.dense(x, 1024)
+        x = tf.layers.dense(x, 64)
         # Apply Dropout (if is_training is False, dropout is not applied)
         x = tf.layers.dropout(x, rate=dropout, training=is_training)
 
         # Output layer, class prediction
         out = tf.layers.dense(x, n_classes)
-        # Because 'softmax_cross_entropy_with_logits' loss already apply
+         # Because 'softmax_cross_entropy_with_logits' loss already apply
         # softmax, we only apply softmax to testing network
         out = tf.nn.softmax(out) if not is_training else out
 
@@ -136,7 +136,6 @@ def assign_to_device(device, ps_device='/cpu:0'):
 # Constants used for dealing with the files, matches convert_to_records.
 TRAIN_FILE = 'train.tfrecords'
 VALIDATION_FILE = 'validation.tfrecords'
-
 
 def decode(serialized_example):
   features = tf.parse_single_example(
@@ -223,8 +222,12 @@ def main(_):
                            num_epochs=num_epochs)
 
         #for evalution
-        batch_x_eval, batch_y_eval = inputs(train=False, batch_size=eval_total_size,
+        batch_x_eval, batch_y_eval = inputs(train=False, batch_size=eval_batch_size,
                                             num_epochs=eval_num_epochs)
+        # Add ops to save and restore all the variables.
+
+        # conv1_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="ConvNet")  # not sure about that
+        # saver = tf.train.Saver("ConvNet")  # to save the model
 
         # Loop over all GPUs and construct their own computation graph
         for i in range(num_gpus):
@@ -261,7 +264,7 @@ def main(_):
                 if i == 0:
 
                     # Evaluate model (with test logits, for dropout to be disabled)
-                    correct_pred_eval = tf.equal(tf.argmax(logits_eval, 1), tf.argmax(batch_y_eval, 1))
+                    correct_pred_eval = tf.equal(tf.argmax(logits_eval, 0), tf.argmax(batch_y_eval, 0)) #argmax how to use
                     accuracy_eval = tf.reduce_mean(tf.cast(correct_pred_eval, tf.float32))
                     ## tensorflow.python.framework.errors_impl.UnimplementedError: Cast string to int32 is not supported ?????
 
@@ -296,10 +299,21 @@ def main(_):
                     loss, acc = sess.run([loss_op, accuracy_eval])
                     print("Step " + str(step) + ": Minibatch Loss= " + \
                           "{:.4f}".format(loss) + ", Training Accuracy= " + \
-                          "{:.3f}".format(acc) + ", %i Examples/sec" % int(batch_size /te))
+                          "{:.3f}".format(acc) + ", %i Examples/sec" % float(batch_size /te))
                 step += 1
             print("Optimization Finished!")
 
+            tf.train.Saver().save(sess, "./result/my_model_final")
+            # conv_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="x")
+            # reuse_vars_dict = dict([(var.op.name, var) for var in reuse_vars])
+            # restore_saver = tf.train.Saver(reuse_vars_dict)
+
+            # restore_saver.restore(sess, "./my_model_final.ckpt")
+
+            # save_path = saver.save(sess, "/tmp/CNNdemo.ckpt")
+            export_dir = './tmp/'
+            # tf.saved_model.simple_save(sess, export_dir, inputs={"x": x, "y": y}, outputs={"z": z}) #new method
+            # print("Model saved in path: %s" % save_path)
             # try to edit it so that it fits the other parts
             # # Calculate accuracy for MNIST test images
             # print("Testing Accuracy:", \
