@@ -60,11 +60,11 @@ def convert_to(data_set, name):
       if labels[index] == 0:
           label_vector = [0, 1]
           image_label_array = np.asarray(label_vector)
-          # image_label = image_label_array.tostring()
+          image_label = image_label_array.tostring()
       elif labels[index] == 1:
           label_vector = [1, 0]
           image_label_array = np.asarray(label_vector)
-          # image_label = image_label_array.tostring()
+          image_label = image_label_array.tostring()
       else:
           print("There is something wrong with the label, not either 1 or 0 !!!!!!!!!!!!!")
       example = tf.train.Example(
@@ -73,7 +73,7 @@ def convert_to(data_set, name):
                   'height': _int64_feature(rows),
                   'width': _int64_feature(cols),
                   'depth': _int64_feature(depth),
-                  'label': _int64_feature(image_label_array),
+                  'label': _bytes_feature(image_label),
                   'image_raw': _bytes_feature(image_raw)
               }))
       writer.write(example.SerializeToString())
@@ -98,7 +98,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--directory',
       type=str,
-      default='./tmp/data5/',
+      default='./tmp/data6/',
       help='Directory to download data files and write the converted result'
   )
   parser.add_argument(

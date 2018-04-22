@@ -22,7 +22,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 import argparse
 
-mnist = input_data.read_data_sets("/tmp/data6/", one_hot=True)
+mnist = input_data.read_data_sets("/tmp/data5/", one_hot=True)
 
 # Basic model parameters as external flags.
 FLAGS = None
@@ -44,7 +44,7 @@ eval_num_epochs = 1000
 # learning_rate=0.01
 num_epochs = 1000
 batch_size = 100
-train_dir = './tmp/data6/'
+train_dir = './tmp/data5/'
 
 ##########
 # Network Parameters
@@ -358,7 +358,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--train_dir',
       type=str,
-      default='./tmp/data6/',
+      default='./tmp/data5/',
       help='Directory with the training data.'
   )
   FLAGS, unparsed = parser.parse_known_args()

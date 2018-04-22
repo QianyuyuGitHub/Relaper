@@ -28,6 +28,8 @@ import tensorflow as tf
 
 FLAGS = None
 
+def _int64_list_feature(value):
+  return tf.train.Feature(int64_list=tf.train.Int64List(value=[value[0], value[1]]))
 
 def _int64_feature(value):
   return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
@@ -67,7 +69,7 @@ def convert_to(data_set, name):
                   'height': _int64_feature(rows),
                   'width': _int64_feature(cols),
                   'depth': _int64_feature(depth),
-                  'label': _int64_feature(int(labels[index])),
+                  'label': _int64_list_feature(label_vector),  # this should be edited
                   'image_raw': _bytes_feature(image_raw)
               }))
       writer.write(example.SerializeToString())
@@ -92,7 +94,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--directory',
       type=str,
-      default='./tmp/data2/',
+      default='./tmp/data5/',
       help='Directory to download data files and write the converted result'
   )
   parser.add_argument(

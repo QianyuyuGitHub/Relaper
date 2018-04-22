@@ -22,16 +22,14 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 import argparse
 
-mnist = input_data.read_data_sets("/tmp/data6/", one_hot=True)
+mnist = input_data.read_data_sets("/tmp/data4/", one_hot=True)
 
 # Basic model parameters as external flags.
 FLAGS = None
 
-LABEL_SHAPE = 1 * 2
-
 # Training Parameters
-num_gpus = 2
-num_steps = 20000  # this is the parameter to control the step
+num_gpus = 1
+num_steps = 200#00  # this is the parameter to control the step
 learning_rate = 0.05
 # batch_size = 1024
 display_step = 100
@@ -44,7 +42,7 @@ eval_num_epochs = 1000
 # learning_rate=0.01
 num_epochs = 1000
 batch_size = 100
-train_dir = './tmp/data6/'
+train_dir = './tmp/data4/'
 
 ##########
 # Network Parameters
@@ -156,7 +154,6 @@ def decode(serialized_example):
   # Convert label from a scalar uint8 tensor to an int32 scalar.
   label = tf.decode_raw(features['label'], tf.int32)
   label = tf.cast(label, tf.int32)
-  # label= features['label']
 
   return image, label
 
@@ -286,6 +283,7 @@ def main(_):
         # config.gpu_options.per_process_gpu_memory_fraction = 0.5
         with tf.Session(config=config) as sess:
 
+            # Run the initializer
             sess.run(init)
 
             # Keep training until reach max iterations
@@ -296,7 +294,6 @@ def main(_):
                 ts = time.time()
                 sess.run(train_op) #### no placeholders   no feed_dict={X: batch_x, Y: batch_y}
                 te = time.time() - ts
-                print(logits_train.eval())
                 if step % display_step == 0 or step == 1:
                     # Calculate batch loss and accuracy
                     loss, acc = sess.run([loss_op, accuracy_eval])
@@ -306,13 +303,12 @@ def main(_):
                 step += 1
             print("Optimization Finished!")
 
-            tf.train.Saver().save(sess, "./result3/my_model_final")
+            tf.train.Saver().save(sess, "./result2/my_model_final_single")
             # conv_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="x")
             # reuse_vars_dict = dict([(var.op.name, var) for var in reuse_vars])
             # restore_saver = tf.train.Saver(reuse_vars_dict)
 
             # restore_saver.restore(sess, "./my_model_final.ckpt")
-
 
             # save_path = saver.save(sess, "/tmp/CNNdemo.ckpt")
             export_dir = './tmp/'
@@ -358,7 +354,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--train_dir',
       type=str,
-      default='./tmp/data6/',
+      default='./tmp/data4/',
       help='Directory with the training data.'
   )
   FLAGS, unparsed = parser.parse_known_args()
